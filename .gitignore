@@ -1,5 +1,9 @@
 .env
+.env.*
+!.env.example
 web/.env
+web/.env.*
+!web/.env.example
 .dev-server.pid
 .dev-server.log
 web/.next/
