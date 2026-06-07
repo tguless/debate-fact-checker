@@ -1,10 +1,8 @@
 "use client";
 
-import { DownloadIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExportReportCta } from "@/components/export-report-cta";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
@@ -105,16 +103,21 @@ export function AnalysisResults({
               <AlertDescription>{analysis.summary}</AlertDescription>
             </Alert>
           ) : null}
-          <a
-            href={`/api/analyses/${analysis.id}/export`}
-            download
-            className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
-          >
-            <DownloadIcon data-icon="inline-start" />
-            Export Markdown report
-          </a>
         </CardContent>
       </Card>
+
+      <ExportReportCta
+        analysisId={analysis.id}
+        videoId={analysis.videoId}
+        videoUrl={analysis.videoUrl}
+        status={analysis.status}
+        live={live}
+        overallScore={analysis.overallScore}
+        claimCount={analysis.claims.length}
+        findingCount={analysis.findings.length}
+        agentMode={analysis.agentMode ?? false}
+        summary={analysis.summary}
+      />
 
       {analysis.phases && analysis.phases.length > 0 ? (
         <PhaseTimeline phases={analysis.phases} />
@@ -198,6 +201,22 @@ export function AnalysisResults({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {!live && analysis.status === "COMPLETED" ? (
+        <ExportReportCta
+          analysisId={analysis.id}
+          videoId={analysis.videoId}
+          videoUrl={analysis.videoUrl}
+          status={analysis.status}
+          live={false}
+          overallScore={analysis.overallScore}
+          claimCount={analysis.claims.length}
+          findingCount={analysis.findings.length}
+          agentMode={analysis.agentMode ?? false}
+          summary={analysis.summary}
+          compact
+        />
+      ) : null}
     </div>
   );
 }

@@ -28,7 +28,7 @@ export async function GET(_request: Request, context: RouteContext) {
   return new NextResponse(markdown, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      "Content-Disposition": `attachment; filename="analysis-${analysis.videoId}.md"`,
+      "Content-Disposition": `attachment; filename="debate-fact-check-${analysis.videoId}.md"`,
     },
   });
 }
