@@ -2,8 +2,6 @@
 
 **Paste a YouTube debate or monologue. Get a citeable breakdown of what's misleading — with sources.**
 
-> **Bring your own API keys.** This repo ships with **no** OpenAI or Tavily credentials. The homepage quick scan runs without keys; **agent fact-checking requires both an [OpenAI API key](https://platform.openai.com/api-keys) and a [Tavily API key](https://tavily.com)** — you add them to `web/.env` after cloning.
-
 Ever watch a 90-minute rant and feel like you're drowning in claims you can't verify fast enough? That's the [Gish Gallop](https://en.wikipedia.org/wiki/Gish_gallop): flood the zone with assertions so nobody can fact-check them in real time. This tool does the opposite — it pulls the transcript, flags rhetoric tricks, and (in agent mode) actually goes and reads primary sources.
 
 Built for people who argue in good faith but need receipts: journalists, researchers, debaters, and anyone tired of "studies show" with no study attached.
