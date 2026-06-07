@@ -37,7 +37,8 @@ ToolLoopAgent.stream()          ← Vercel AI SDK
         ├─ fetch_transcript       ← youtube-transcript-plus
         │     └─ indexTranscriptForRag()  ← LangChain
         ├─ search_transcript_rag  ← LangChain similaritySearch
-        ├─ search_web             ← Tavily/Serper/DuckDuckGo
+        ├─ search_web             ← Tavily/Serper/DuckDuckGo (discovery)
+        ├─ read_url               ← Tavily Extract (full-page source read)
         ├─ record_claim           ← Prisma
         └─ finish_analysis        ← Prisma
         │
