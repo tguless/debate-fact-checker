@@ -2,42 +2,49 @@
 
 **Paste a YouTube debate or monologue. Get a citeable breakdown of what's misleading — with sources.**
 
+> **Bring your own API keys.** This repo ships with **no** OpenAI or Tavily credentials. The homepage quick scan runs without keys; **agent fact-checking requires both an [OpenAI API key](https://platform.openai.com/api-keys) and a [Tavily API key](https://tavily.com)** — you add them to `.env` after cloning.
+
 Ever watch a 90-minute rant and feel like you're drowning in claims you can't verify fast enough? That's the [Gish Gallop](https://en.wikipedia.org/wiki/Gish_gallop): flood the zone with assertions so nobody can fact-check them in real time. This tool does the opposite — it pulls the transcript, flags rhetoric tricks, and (in agent mode) actually goes and reads primary sources.
 
 Built for people who argue in good faith but need receipts: journalists, researchers, debaters, and anyone tired of "studies show" with no study attached.
 
-## API keys — you need your own
-
-This repo does **not** include API keys. You must add them locally after cloning.
-
-| Key | Required for | Get it |
-|-----|--------------|--------|
-| **`OPENAI_API_KEY`** | Agent mode (`/agent`) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| **`TAVILY_API_KEY`** | Agent mode (`/agent`) — search + reading full source pages | [tavily.com](https://tavily.com) |
-
-Quick scan on the homepage works **without** any keys. Agent fact-checking needs **both** keys — OpenAI runs the agent; Tavily verifies claims against the web.
-
-```bash
-cp .env.example .env
-# Edit .env — paste your OpenAI and Tavily keys
-```
-
-Never commit `.env`. Only `.env.example` (with placeholders) is in git.
-
 ## Try it in 2 minutes
 
-**No API keys** for the quick scan — just Docker and Node 20.
+You need **Node 20+** and **Docker**. Then:
 
 ```bash
 git clone https://github.com/tguless/debate-fact-checker.git
 cd debate-fact-checker
 chmod +x start.sh stop.sh
+
+# 1) Configure API keys (required for /agent — skip only if you want quick scan)
+cp .env.example .env
+```
+
+Open `.env` and paste **your** keys:
+
+```env
+OPENAI_API_KEY="sk-..."          # https://platform.openai.com/api-keys
+TAVILY_API_KEY="tvly-..."        # https://tavily.com
+```
+
+Then start the app:
+
+```bash
+# 2) Launch Postgres + Next.js
 ./start.sh
 ```
 
-Open **http://localhost:3847**, paste any YouTube URL with captions, and hit **Run rhetoric analysis**. You'll get a manipulation score, flagged claims, and technique breakdown in under a minute.
+| What to open | Keys needed? |
+|--------------|----------------|
+| **http://localhost:3847** — quick rhetoric scan | No |
+| **http://localhost:3847/agent** — source-verified fact-check | **Yes — OpenAI + Tavily** |
 
-**Want the full agent?** Add your keys to `.env`, run `./stop.sh && ./start.sh`, then open **http://localhost:3847/agent**. The UI will tell you if keys are missing. Watch the agent search, read sources, and record verdicts live — then download the Markdown report.
+Paste any YouTube URL with captions. Quick scan gives you a manipulation score and flagged claims in under a minute. Agent mode searches the web, reads full articles, records verdicts live, and lets you **download a Markdown report**.
+
+If `/agent` shows a setup warning, your keys are missing or still placeholders — edit `.env`, then `./stop.sh && ./start.sh`.
+
+**Never commit `.env`.** Keys stay on your machine only.
 
 ### What you'll get
 
@@ -77,28 +84,26 @@ Good candidates: political monologues, podcast rants, debate clips — anything 
 - Quick scan: nothing else
 - Agent mode: **your** `OPENAI_API_KEY` + **your** `TAVILY_API_KEY` (both required)
 
-## Setup
+## Setup reference
+
+`start.sh` copies root `.env` → `web/.env` on every run. Default ports: app **3847**, Postgres **5487**.
 
 ```bash
-cp .env.example .env   # add keys for agent mode
-./start.sh             # Postgres + Next.js on :3847
-./stop.sh              # tear down
+./stop.sh   # tear down
 ```
 
-`start.sh` copies `.env` → `web/.env` and handles the rest. Default ports: app **3847**, Postgres **5487** (change in `.env` if they clash).
+### Environment variables
 
-### Environment
+| Variable | Required? | Purpose |
+|----------|-----------|---------|
+| `OPENAI_API_KEY` | **Yes** (for `/agent`) | Powers the fact-checking agent — [get one here](https://platform.openai.com/api-keys) |
+| `TAVILY_API_KEY` | **Yes** (for `/agent`) | Web search + full-page source reads — [get one here](https://tavily.com) |
+| `OPENAI_MODEL` | No | e.g. `gpt-4.1-mini` or `gpt-5-mini` |
+| `AGENT_MAX_STEPS` | No | Step budget (default `50`) |
+| `DFC_APP_PORT` / `PORT` | No | App port |
+| `DFC_POSTGRES_PORT` | No | Postgres port |
 
-| Variable | Purpose |
-|----------|---------|
-| `OPENAI_API_KEY` | Agent LLM (required for `/agent`) |
-| `OPENAI_MODEL` | e.g. `gpt-4.1-mini` or `gpt-5-mini` |
-| `TAVILY_API_KEY` | Web search + page extract — **required for agent mode** |
-| `AGENT_MAX_STEPS` | Step budget (default `50`) |
-| `DFC_APP_PORT` / `PORT` | App port |
-| `DFC_POSTGRES_PORT` | Postgres port |
-
-Never commit `.env` — only `.env.example` is tracked.
+Without both keys, agent mode is disabled (quick scan still works). `start.sh` prints a warning if either key is missing.
 
 ## How it works
 
