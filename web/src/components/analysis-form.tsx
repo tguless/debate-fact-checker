@@ -48,11 +48,11 @@ export function AnalysisForm() {
       <CardHeader>
         <CardTitle className="font-heading text-2xl">Analyze a debate or monologue</CardTitle>
         <CardDescription>
-          Quick heuristic scan, or use{" "}
+          Quick heuristic scan — no API keys needed. For source-verified fact-checking, use{" "}
           <a href="/agent" className="text-primary hover:underline">
-            Agent fact-check
+            Agent mode
           </a>{" "}
-          for multi-turn analysis with web search and visible turns.
+          (requires your OpenAI + Tavily keys in <code className="text-xs">.env</code>).
         </CardDescription>
       </CardHeader>
       <CardContent>

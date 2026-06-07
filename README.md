@@ -6,9 +6,27 @@ Ever watch a 90-minute rant and feel like you're drowning in claims you can't ve
 
 Built for people who argue in good faith but need receipts: journalists, researchers, debaters, and anyone tired of "studies show" with no study attached.
 
+## API keys — you need your own
+
+This repo does **not** include API keys. You must add them locally after cloning.
+
+| Key | Required for | Get it |
+|-----|--------------|--------|
+| **`OPENAI_API_KEY`** | Agent mode (`/agent`) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| **`TAVILY_API_KEY`** | Agent mode (`/agent`) — search + reading full source pages | [tavily.com](https://tavily.com) |
+
+Quick scan on the homepage works **without** any keys. Agent fact-checking needs **both** keys — OpenAI runs the agent; Tavily verifies claims against the web.
+
+```bash
+cp .env.example .env
+# Edit .env — paste your OpenAI and Tavily keys
+```
+
+Never commit `.env`. Only `.env.example` (with placeholders) is in git.
+
 ## Try it in 2 minutes
 
-**No API keys needed** for the quick scan — just Docker and Node 20.
+**No API keys** for the quick scan — just Docker and Node 20.
 
 ```bash
 git clone https://github.com/tguless/debate-fact-checker.git
@@ -19,7 +37,7 @@ chmod +x start.sh stop.sh
 
 Open **http://localhost:3847**, paste any YouTube URL with captions, and hit **Run rhetoric analysis**. You'll get a manipulation score, flagged claims, and technique breakdown in under a minute.
 
-Want the full experience? Copy `.env.example` → `.env`, add an `OPENAI_API_KEY` (and ideally `TAVILY_API_KEY`), restart, then go to **http://localhost:3847/agent**. Watch the agent work live — search, read articles, record verdicts — then **download the Markdown report** to paste into a rebuttal, thread, or notes.
+**Want the full agent?** Add your keys to `.env`, run `./stop.sh && ./start.sh`, then open **http://localhost:3847/agent**. The UI will tell you if keys are missing. Watch the agent search, read sources, and record verdicts live — then download the Markdown report.
 
 ### What you'll get
 
@@ -37,7 +55,7 @@ Want the full experience? Copy `.env.example` → `.env`, add an `OPENAI_API_KEY
 | Mode | Path | API keys | Best for |
 |------|------|----------|----------|
 | **Quick scan** | `/` | None | Fast rhetoric pass — great first look |
-| **Agent fact-check** | `/agent` | OpenAI + Tavily (recommended) | Real verification against news and primary sources |
+| **Agent fact-check** | `/agent` | **OpenAI + Tavily (both required)** | Real verification against news and primary sources |
 
 The agent doesn't follow a fixed script. It reads a [Cursor skill](.cursor/skills/debate-fact-check/SKILL.md), fetches the transcript, searches the web, **reads full pages** (not just snippets), and records what it finds — streaming every step to the UI.
 
@@ -57,7 +75,7 @@ Good candidates: political monologues, podcast rants, debate clips — anything 
 - **Docker** (for Postgres)
 - **npm**
 - Quick scan: nothing else
-- Agent mode: `OPENAI_API_KEY` + `TAVILY_API_KEY` (search + full-page extract)
+- Agent mode: **your** `OPENAI_API_KEY` + **your** `TAVILY_API_KEY` (both required)
 
 ## Setup
 
@@ -75,7 +93,7 @@ cp .env.example .env   # add keys for agent mode
 |----------|---------|
 | `OPENAI_API_KEY` | Agent LLM (required for `/agent`) |
 | `OPENAI_MODEL` | e.g. `gpt-4.1-mini` or `gpt-5-mini` |
-| `TAVILY_API_KEY` | Web search + page extract — strongly recommended |
+| `TAVILY_API_KEY` | Web search + page extract — **required for agent mode** |
 | `AGENT_MAX_STEPS` | Step budget (default `50`) |
 | `DFC_APP_PORT` / `PORT` | App port |
 | `DFC_POSTGRES_PORT` | Postgres port |

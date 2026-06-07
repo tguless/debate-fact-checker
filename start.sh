@@ -65,9 +65,32 @@ else
   echo $! >"$PID_FILE"
 fi
 
+OPENAI_KEY="$(read_env_value OPENAI_API_KEY "$WEB_DIR/.env" "")"
+TAVILY_KEY="$(read_env_value TAVILY_API_KEY "$WEB_DIR/.env" "")"
+
 echo ""
 echo "Debate Fact Checker is up."
 echo "  App:      http://localhost:${PORT}"
 echo "  Postgres: localhost:${DFC_POSTGRES_PORT}"
 echo "  Logs:     $LOG_FILE"
+echo ""
+echo "  Quick scan:  http://localhost:${PORT}  (no API keys needed)"
+echo "  Agent mode:  http://localhost:${PORT}/agent"
+
+if [[ -z "$OPENAI_KEY" || "$OPENAI_KEY" == "sk-..." ]]; then
+  echo ""
+  echo "  ⚠ OPENAI_API_KEY not set — agent mode disabled."
+  echo "    Get a key: https://platform.openai.com/api-keys"
+fi
+if [[ -z "$TAVILY_KEY" || "$TAVILY_KEY" == "tvly-..." ]]; then
+  echo ""
+  echo "  ⚠ TAVILY_API_KEY not set — agent web search/read disabled."
+  echo "    Get a key: https://tavily.com"
+fi
+if [[ (-z "$OPENAI_KEY" || "$OPENAI_KEY" == "sk-...") || (-z "$TAVILY_KEY" || "$TAVILY_KEY" == "tvly-...") ]]; then
+  echo ""
+  echo "  Add both keys to .env, then: ./stop.sh && ./start.sh"
+fi
+
+echo ""
 echo "Run ./stop.sh to shut down."

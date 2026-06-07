@@ -1,16 +1,12 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { AgentTurnTimelineLive } from "@/components/agent-turn-timeline";
+import { ApiKeysSetupCard } from "@/components/api-keys-setup-card";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getApiKeyStatus } from "@/lib/env-status";
+import { AgentPageClient } from "./agent-page-client";
 
 export default function AgentPage() {
-  const [url, setUrl] = useState("");
-  const [startedUrl, setStartedUrl] = useState<string | null>(null);
+  const keyStatus = getApiKeyStatus();
 
   return (
     <main className="relative min-h-screen">
@@ -23,40 +19,13 @@ export default function AgentPage() {
         <div className="flex flex-col gap-2">
           <h1 className="font-heading text-3xl font-semibold">Agent fact-check</h1>
           <p className="max-w-2xl text-muted-foreground">
-            Powered by Vercel AI SDK ToolLoopAgent + LangChain RAG + Cursor skill. The agent
-            decides each step, searches sources, and records verdicts — you watch every turn.
+            Autonomous multi-turn verification — transcript RAG, web search, full-page source reads,
+            and per-claim verdicts streamed live.
           </p>
         </div>
 
-        {!startedUrl ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Start agent run</CardTitle>
-              <CardDescription>
-                No fixed pipeline — the agent orchestrates fetch, search, verify, and record in
-                whatever order it chooses.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <Input
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="h-12"
-              />
-              <button
-                type="button"
-                className={cn(buttonVariants(), "h-12")}
-                disabled={!url.trim()}
-                onClick={() => setStartedUrl(url.trim())}
-              >
-                Launch agent
-              </button>
-            </CardContent>
-          </Card>
-        ) : (
-          <AgentTurnTimelineLive url={startedUrl} />
-        )}
+        <ApiKeysSetupCard status={keyStatus} />
+        <AgentPageClient agentReady={keyStatus.agentReady} />
       </div>
     </main>
   );
