@@ -1,0 +1,7 @@
+.env
+web/.env
+.dev-server.pid
+.dev-server.log
+web/.next/
+web/node_modules/
+node_modules/

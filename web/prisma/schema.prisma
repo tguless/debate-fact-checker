@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AnalysisStatus {
+  PENDING
+  FETCHING_TRANSCRIPT
+  ANALYZING
+  AGENT_RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum TurnRole {
+  AGENT
+  TOOL
+  SYSTEM
+}
+
+enum TurnType {
+  THINKING
+  TOOL_CALL
+  TOOL_RESULT
+  MESSAGE
+  COMPLETE
+  ERROR
+}
+
+enum RhetoricTechnique {
+  GISH_GALLOP
+  FIREHOSE
+  CORRELATION_CAUSATION
+  STATISTICAL_DISTORTION
+  STRAWMAN
+  UNSUPPORTED_LEAP
+  PREEMPTIVE_CLOSURE
+}
+
+enum ClaimVerdict {
+  FALSE
+  MISLEADING
+  DISTORTED
+  UNSUPPORTED
+  FLAGGED
+}
+
+model Analysis {
+  id              String         @id @default(cuid())
+  videoUrl        String
+  videoId         String
+  title           String?
+  status          AnalysisStatus @default(PENDING)
+  errorMessage    String?
+  fullText        String?        @db.Text
+  durationSeconds Int?
+  segmentCount    Int            @default(0)
+  overallScore    Float?
+  summary         String?        @db.Text
+  phases          Json?
+  metrics         Json?
+  agentMode       Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  segments  TranscriptSegment[]
+  findings  TechniqueFinding[]
+  claims    DetectedClaim[]
+  turns     AgentTurn[]
+
+  @@index([videoId])
+  @@index([createdAt])
+}
+
+model TranscriptSegment {
+  id         String   @id @default(cuid())
+  analysisId String
+  index      Int
+  startMs    Int
+  durationMs Int
+  text       String   @db.Text
+  timestamp  String
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId, index])
+}
+
+model TechniqueFinding {
+  id         String            @id @default(cuid())
+  analysisId String
+  technique  RhetoricTechnique
+  score      Float
+  severity   String
+  title      String
+  summary    String            @db.Text
+  evidence   Json
+  createdAt  DateTime          @default(now())
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+model DetectedClaim {
+  id         String            @id @default(cuid())
+  analysisId String
+  text       String            @db.Text
+  timestamp  String?
+  startMs    Int?
+  technique  RhetoricTechnique
+  category   String
+  confidence Float
+  excerpt    String            @db.Text
+  reasoning  String            @db.Text
+  verdict    ClaimVerdict      @default(FLAGGED)
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+model AgentTurn {
+  id         String   @id @default(cuid())
+  analysisId String
+  turnIndex  Int
+  role       TurnRole
+  turnType   TurnType
+  content    String?  @db.Text
+  toolName   String?
+  toolInput  Json?
+  toolOutput Json?
+  createdAt  DateTime @default(now())
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId, turnIndex])
+}

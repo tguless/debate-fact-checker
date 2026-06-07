@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dfc-postgres
+    restart: unless-stopped
+    ports:
+      - "${DFC_POSTGRES_PORT:-5487}:5432"
+    environment:
+      POSTGRES_USER: dfc
+      POSTGRES_PASSWORD: dfc_dev_password
+      POSTGRES_DB: debate_fact_checker
+    volumes:
+      - dfc_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dfc -d debate_fact_checker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dfc_postgres_data:

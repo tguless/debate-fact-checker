@@ -1,0 +1,105 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnalysisResults } from "@/components/analysis-results";
+import type { AgentTurn } from "@/components/agent-turn-timeline";
+import type { PhaseMarker } from "@/lib/rhetoric/types";
+
+type AnalysisPayload = {
+  id: string;
+  videoUrl: string;
+  videoId: string;
+  status: string;
+  overallScore: number | null;
+  summary: string | null;
+  segmentCount: number;
+  durationSeconds: number | null;
+  findings: Array<{
+    id: string;
+    title: string;
+    score: number;
+    severity: string;
+    summary: string;
+    technique: string;
+  }>;
+  claims: Array<{
+    id: string;
+    text: string;
+    timestamp: string | null;
+    technique: string;
+    category: string;
+    confidence: number;
+    excerpt: string;
+    reasoning: string;
+    verdict: string;
+  }>;
+  phases?: PhaseMarker[] | null;
+  metrics?: Record<string, number> | null;
+  agentMode?: boolean;
+  turns?: AgentTurn[];
+  segments: Array<{
+    id: string;
+    index: number;
+    timestamp: string;
+    text: string;
+  }>;
+};
+
+const RUNNING_STATUSES = new Set(["PENDING", "AGENT_RUNNING"]);
+
+export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
+  const [analysis, setAnalysis] = useState(initial);
+  const latestTurnIndex = useRef(
+    initial.turns?.length ? Math.max(...initial.turns.map((t) => t.turnIndex)) : -1,
+  );
+
+  const poll = useCallback(async () => {
+    const response = await fetch(
+      `/api/analyses/${initial.id}/live?after=${latestTurnIndex.current}`,
+    );
+    if (!response.ok) return;
+
+    const data = (await response.json()) as {
+      status: string;
+      overallScore: number | null;
+      summary: string | null;
+      claims: AnalysisPayload["claims"];
+      findings: AnalysisPayload["findings"];
+      turns: AgentTurn[];
+      latestTurnIndex: number;
+    };
+
+    setAnalysis((prev) => {
+      const existingIds = new Set((prev.turns ?? []).map((t) => t.id));
+      const newTurns = data.turns.filter((t) => !existingIds.has(t.id));
+
+      return {
+        ...prev,
+        status: data.status,
+        overallScore: data.overallScore,
+        summary: data.summary,
+        claims: data.claims,
+        findings: data.findings,
+        turns: [...(prev.turns ?? []), ...newTurns],
+      };
+    });
+
+    if (data.latestTurnIndex > latestTurnIndex.current) {
+      latestTurnIndex.current = data.latestTurnIndex;
+    }
+  }, [initial.id]);
+
+  useEffect(() => {
+    if (!RUNNING_STATUSES.has(analysis.status)) return;
+
+    const interval = setInterval(() => {
+      poll().catch(() => undefined);
+    }, 2000);
+
+    poll().catch(() => undefined);
+
+    return () => clearInterval(interval);
+  }, [analysis.status, poll]);
+
+  return <AnalysisResults analysis={analysis} live={RUNNING_STATUSES.has(analysis.status)} />;
+}
