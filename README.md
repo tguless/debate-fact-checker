@@ -1,125 +1,142 @@
 # Debate Fact Checker
 
-Next.js + TypeScript + shadcn/ui app with Dockerized Postgres. Paste a YouTube URL and analyze misleading debate tactics:
+**Paste a YouTube debate or monologue. Get a citeable breakdown of what's misleading — with sources.**
 
-- **Gish Gallop** — claim volume outpacing verification
-- **Firehosing** — repetition substituting for evidence
-- **Correlation → causation** — stats promoted to conspiracy
-- **Statistical distortion** — ratios/percentages without context
-- **Strawman** — opponent/media caricature
+Ever watch a 90-minute rant and feel like you're drowning in claims you can't verify fast enough? That's the [Gish Gallop](https://en.wikipedia.org/wiki/Gish_gallop): flood the zone with assertions so nobody can fact-check them in real time. This tool does the opposite — it pulls the transcript, flags rhetoric tricks, and (in agent mode) actually goes and reads primary sources.
 
-## Two analysis modes
+Built for people who argue in good faith but need receipts: journalists, researchers, debaters, and anyone tired of "studies show" with no study attached.
 
-| Mode | URL | What it does |
-|------|-----|--------------|
-| **Quick scan** | `/` | Fast heuristic pattern detection over the transcript (no LLM required) |
-| **Agent fact-check** | `/agent` | Autonomous multi-turn agent: transcript RAG, web search, full-page reads, per-claim verdicts |
+## Try it in 2 minutes
 
-The agent mode uses OpenAI to verify claims against primary sources (via Tavily search + `read_url` extract), records `FALSE` / `MISLEADING` / `DISTORTED` / etc., and streams every turn live via SSE.
-
-## Requirements
-
-- **Node.js 20+** (Next.js 16 requires it)
-- Docker Desktop / Docker Engine
-- npm
-- **Quick scan:** no API keys
-- **Agent mode:** `OPENAI_API_KEY` (required), `TAVILY_API_KEY` (recommended for search + page extract)
-
-## Quick start
+**No API keys needed** for the quick scan — just Docker and Node 20.
 
 ```bash
+git clone https://github.com/tguless/debate-fact-checker.git
+cd debate-fact-checker
 chmod +x start.sh stop.sh
-cp .env.example .env   # add your API keys
 ./start.sh
 ```
 
-Open http://localhost:3847
+Open **http://localhost:3847**, paste any YouTube URL with captions, and hit **Run rhetoric analysis**. You'll get a manipulation score, flagged claims, and technique breakdown in under a minute.
 
-Stop everything:
+Want the full experience? Copy `.env.example` → `.env`, add an `OPENAI_API_KEY` (and ideally `TAVILY_API_KEY`), restart, then go to **http://localhost:3847/agent**. Watch the agent work live — search, read articles, record verdicts — then **download the Markdown report** to paste into a rebuttal, thread, or notes.
+
+### What you'll get
+
+| Output | Why it matters |
+|--------|----------------|
+| **Manipulation score** (0–100) | Quick signal for how hard the speaker is leaning on rhetoric over evidence |
+| **Per-claim verdicts** | `FALSE`, `MISLEADING`, `DISTORTED`, `UNSUPPORTED`, `FLAGGED` — with reasoning |
+| **Technique findings** | Gish Gallop, firehosing, stat distortion, strawman — scored and explained |
+| **Timestamped excerpts** | Jump to the exact moment in the video |
+| **Downloadable `.md` report** | Shareable, citeable, ready for Notion or a blog post |
+| **Live agent turns** | See every tool call — no black box |
+
+## Two modes — start free, go deep when ready
+
+| Mode | Path | API keys | Best for |
+|------|------|----------|----------|
+| **Quick scan** | `/` | None | Fast rhetoric pass — great first look |
+| **Agent fact-check** | `/agent` | OpenAI + Tavily (recommended) | Real verification against news and primary sources |
+
+The agent doesn't follow a fixed script. It reads a [Cursor skill](.cursor/skills/debate-fact-check/SKILL.md), fetches the transcript, searches the web, **reads full pages** (not just snippets), and records what it finds — streaming every step to the UI.
+
+## Example workflow
+
+1. Paste a monologue URL (any video with YouTube captions).
+2. **Quick scan** → see which techniques dominate and which claims look suspicious.
+3. Switch to **Agent mode** on the same or a new video → watch turns stream in.
+4. Open the report → claims tab for verdicts, turns tab for the audit trail.
+5. **Download the report** — you get `debate-fact-check-{videoId}.md` with everything bundled.
+
+Good candidates: political monologues, podcast rants, debate clips — anything dense with statistics and accusations.
+
+## Requirements
+
+- **Node.js 20+**
+- **Docker** (for Postgres)
+- **npm**
+- Quick scan: nothing else
+- Agent mode: `OPENAI_API_KEY` + `TAVILY_API_KEY` (search + full-page extract)
+
+## Setup
 
 ```bash
-./stop.sh
+cp .env.example .env   # add keys for agent mode
+./start.sh             # Postgres + Next.js on :3847
+./stop.sh              # tear down
 ```
 
-`start.sh` copies root `.env` → `web/.env`, starts Postgres, and launches the Next.js dev server.
+`start.sh` copies `.env` → `web/.env` and handles the rest. Default ports: app **3847**, Postgres **5487** (change in `.env` if they clash).
 
-## Configuration
-
-Copy `.env.example` to `.env` and fill in keys. Never commit `.env` — only `.env.example` is tracked.
+### Environment
 
 | Variable | Purpose |
 |----------|---------|
 | `OPENAI_API_KEY` | Agent LLM (required for `/agent`) |
-| `OPENAI_MODEL` | Model ID (default in example: `gpt-4.1-mini`) |
-| `TAVILY_API_KEY` | Web search + full-page extract via Tavily |
-| `AGENT_MAX_STEPS` | Tool-loop step budget (default `50`) |
-| `DFC_APP_PORT` / `PORT` | Next.js port (default **3847**) |
-| `DFC_POSTGRES_PORT` | Postgres host port (default **5487**) |
+| `OPENAI_MODEL` | e.g. `gpt-4.1-mini` or `gpt-5-mini` |
+| `TAVILY_API_KEY` | Web search + page extract — strongly recommended |
+| `AGENT_MAX_STEPS` | Step budget (default `50`) |
+| `DFC_APP_PORT` / `PORT` | App port |
+| `DFC_POSTGRES_PORT` | Postgres port |
+
+Never commit `.env` — only `.env.example` is tracked.
+
+## How it works
+
+| Layer | Framework |
+|-------|-----------|
+| Agent loop | [Vercel AI SDK](https://ai-sdk.dev) `ToolLoopAgent` |
+| Transcript RAG | [LangChain](https://js.langchain.com) + `OpenAIEmbeddings` |
+| Web search + read | Tavily Search + Tavily Extract |
+| Skill | [Cursor Agent Skills](https://cursor.com/docs) format |
+
+The agent orchestrates its own steps: `read_skill` → `fetch_transcript` → `search_transcript_rag` → `search_web` → `read_url` → `record_claim` → `finish_analysis`. No hardcoded pipeline.
+
+Details: [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+## API
+
+- `POST /api/analyze` — quick heuristic scan
+- `POST /api/agent/analyze` — agent run (SSE)
+- `GET /api/analyses/:id` — full report
+- `GET /api/analyses/:id/live` — poll while agent runs
+- `GET /api/analyses/:id/export` — Markdown download
 
 ## Project layout
 
 ```
 debate-fact-checker/
-├── .cursor/skills/debate-fact-check/   # Agent skill (orchestration + verdict rubric)
-├── docker-compose.yml                  # Postgres 16
+├── .cursor/skills/debate-fact-check/   # Agent skill
 ├── start.sh / stop.sh
+├── docker-compose.yml
 └── web/                                # Next.js app
-    ├── prisma/                         # database schema
-    └── src/
-        ├── app/                        # pages + API routes
-        ├── components/                 # shadcn UI + live turn timeline
-        └── lib/
-            ├── agent/                  # Vercel AI SDK ToolLoopAgent + tools
-            ├── rag/                    # LangChain transcript RAG
-            ├── rhetoric/               # heuristic analyzer (quick scan)
-            └── youtube.ts              # transcript fetch
-```
-
-## Agent fact-check (`/agent`)
-
-Multi-turn autonomous analysis using standard frameworks:
-
-| Layer | Framework |
-|-------|-----------|
-| Agent loop | [Vercel AI SDK](https://ai-sdk.dev) `ToolLoopAgent` |
-| Transcript RAG | [LangChain](https://js.langchain.com) `MemoryVectorStore` + `OpenAIEmbeddings` |
-| Web search + page read | Tavily Search + Tavily Extract (`read_url` tool) |
-| Skill | [Cursor Agent Skills](https://cursor.com/docs) `.cursor/skills/debate-fact-check/SKILL.md` |
-
-The agent reads its skill and **decides its own turn order** — no hardcoded pipeline. Tool calls and results are persisted and streamed live (SSE on `/agent`, polling on `/analyses/:id` while running).
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full stack map.
-
-## API
-
-- `POST /api/analyze` — quick heuristic scan (JSON)
-- `POST /api/agent/analyze` — agent run (SSE stream of turns)
-- `GET /api/analyses` — recent analyses
-- `GET /api/analyses/:id` — full report
-- `GET /api/analyses/:id/live` — poll status, turns, claims while agent is running
-- `GET /api/analyses/:id/turns` — agent turn history
-- `GET /api/analyses/:id/export` — Markdown export
-
-## Beads planning
-
-Long-horizon tasks tracked with [beads](https://github.com/steveyegge/beads):
-
-```bash
-bd list --parent dfc-r9p
-bd show dfc-r9p
+    └── src/lib/
+        ├── agent/                      # ToolLoopAgent + tools
+        ├── rag/                        # LangChain transcript RAG
+        └── rhetoric/                   # Heuristic quick scan
 ```
 
 ## Roadmap
 
-| ID | Task | Status |
-|----|------|--------|
-| dfc-r9p.1–.6 | Scaffold, Postgres, transcript, heuristics, UI, scripts | Done |
-| dfc-r9p.7 | Agent fact-check + gold-standard calibration | In progress |
-| dfc-r9p.8–.11 | Verdict rubric, export, history, agentic flow | Done |
+| Area | Status |
+|------|--------|
+| Scaffold, Postgres, transcript, heuristics, UI | Done |
+| Agent fact-check + live turns + export | Done |
+| Gold-standard calibration | In progress |
 
-## Notes
+Tracked with [beads](https://github.com/steveyegge/beads) — `bd list --parent dfc-r9p`
 
-- Transcript fetch requires YouTube captions to be available for the video.
-- **Quick scan** is heuristic only. **Agent mode** is LLM fact-checking with web search and full-page source reads — quality depends on model, step budget, and source availability.
-- If the agent hits the step limit, it auto-finalizes a summary and score from recorded claims.
-- Default ports: app **3847**, Postgres **5487** — change in `.env` if they clash with other projects.
+## Limitations
+
+- Needs YouTube captions on the video.
+- Quick scan is pattern-based; agent mode quality depends on model, step budget, and source availability.
+- Agent auto-finalizes if it hits the step limit — you still get a score and summary.
+
+## Contribute
+
+Issues and PRs welcome. If you run it on a video and get something interesting — especially a claim the agent got right or wrong — open an issue. That's how we calibrate.
+
+---
+
+*Separate the scandal from the sermon. Correct the statistic without minimizing the victim.*
