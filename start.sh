@@ -29,11 +29,19 @@ if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
   nvm use 20 >/dev/null 2>&1 || nvm use 22 >/dev/null 2>&1 || nvm use 23 >/dev/null 2>&1 || true
 fi
 
+if [[ ! -f "$WEB_DIR/.env" ]]; then
+  if [[ -f "$WEB_DIR/.env.example" ]]; then
+    cp "$WEB_DIR/.env.example" "$WEB_DIR/.env"
+    echo "Created web/.env from web/.env.example — add your OpenAI and Tavily keys"
+  elif [[ -f "$ROOT_DIR/.env.example" ]]; then
+    cp "$ROOT_DIR/.env.example" "$WEB_DIR/.env"
+    echo "Created web/.env from .env.example — add your OpenAI and Tavily keys"
+  fi
+fi
+
+# Root .env is optional; when present it overrides web/.env for this run
 if [[ -f "$ROOT_DIR/.env" ]]; then
   cp "$ROOT_DIR/.env" "$WEB_DIR/.env"
-elif [[ ! -f "$WEB_DIR/.env" ]]; then
-  cp "$ROOT_DIR/.env.example" "$WEB_DIR/.env"
-  echo "Created web/.env from .env.example"
 fi
 
 DFC_APP_PORT="$(read_env_value DFC_APP_PORT "$WEB_DIR/.env" 3847)"

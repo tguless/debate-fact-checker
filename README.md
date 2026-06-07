@@ -2,7 +2,7 @@
 
 **Paste a YouTube debate or monologue. Get a citeable breakdown of what's misleading — with sources.**
 
-> **Bring your own API keys.** This repo ships with **no** OpenAI or Tavily credentials. The homepage quick scan runs without keys; **agent fact-checking requires both an [OpenAI API key](https://platform.openai.com/api-keys) and a [Tavily API key](https://tavily.com)** — you add them to `.env` after cloning.
+> **Bring your own API keys.** This repo ships with **no** OpenAI or Tavily credentials. The homepage quick scan runs without keys; **agent fact-checking requires both an [OpenAI API key](https://platform.openai.com/api-keys) and a [Tavily API key](https://tavily.com)** — you add them to `web/.env` after cloning.
 
 Ever watch a 90-minute rant and feel like you're drowning in claims you can't verify fast enough? That's the [Gish Gallop](https://en.wikipedia.org/wiki/Gish_gallop): flood the zone with assertions so nobody can fact-check them in real time. This tool does the opposite — it pulls the transcript, flags rhetoric tricks, and (in agent mode) actually goes and reads primary sources.
 
@@ -18,10 +18,10 @@ cd debate-fact-checker
 chmod +x start.sh stop.sh
 
 # 1) Configure API keys (required for /agent — skip only if you want quick scan)
-cp .env.example .env
+cp web/.env.example web/.env
 ```
 
-Open `.env` and paste **your** keys:
+Open `web/.env` and paste **your** keys (Next.js reads this file):
 
 ```env
 OPENAI_API_KEY="sk-..."          # https://platform.openai.com/api-keys
@@ -42,9 +42,9 @@ Then start the app:
 
 Paste any YouTube URL with captions. Quick scan gives you a manipulation score and flagged claims in under a minute. Agent mode searches the web, reads full articles, records verdicts live, and lets you **download a Markdown report**.
 
-If `/agent` shows a setup warning, your keys are missing or still placeholders — edit `.env`, then `./stop.sh && ./start.sh`.
+If `/agent` shows a setup warning, your keys are missing or still placeholders — edit `web/.env`, then `./stop.sh && ./start.sh`.
 
-**Never commit `.env`.** Keys stay on your machine only.
+**Never commit `web/.env`.** Keys stay on your machine only. (A root `.env` also works — `start.sh` syncs it to `web/.env`.)
 
 ### What you'll get
 
@@ -86,7 +86,7 @@ Good candidates: political monologues, podcast rants, debate clips — anything 
 
 ## Setup reference
 
-`start.sh` copies root `.env` → `web/.env` on every run. Default ports: app **3847**, Postgres **5487**.
+Next.js loads **`web/.env`**. `start.sh` creates it from `web/.env.example` if missing, and copies a root `.env` over it when present. Default ports: app **3847**, Postgres **5487**.
 
 ```bash
 ./stop.sh   # tear down

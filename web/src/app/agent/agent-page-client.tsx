@@ -40,7 +40,7 @@ export function AgentPageClient({ agentReady }: { agentReady: boolean }) {
             </button>
             {!agentReady ? (
               <p className="text-sm text-muted-foreground">
-                Add your OpenAI and Tavily keys to <code>.env</code>, then restart the app.
+                Add your OpenAI and Tavily keys to <code>web/.env</code>, then restart the app.
               </p>
             ) : null}
           </CardContent>

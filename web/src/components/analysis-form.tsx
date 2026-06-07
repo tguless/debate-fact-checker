@@ -52,7 +52,7 @@ export function AnalysisForm() {
           <a href="/agent" className="text-primary hover:underline">
             Agent mode
           </a>{" "}
-          (requires your OpenAI + Tavily keys in <code className="text-xs">.env</code>).
+          (requires your OpenAI + Tavily keys in <code className="text-xs">web/.env</code>).
         </CardDescription>
       </CardHeader>
       <CardContent>

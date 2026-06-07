@@ -12,13 +12,13 @@ export function ApiKeysSetupCard({ status }: { status: ApiKeyStatus }) {
       <AlertDescription className="flex flex-col gap-3 text-sm">
         <p>
           Agent fact-checking won&apos;t work until you add <strong>your own</strong> OpenAI and
-          Tavily keys to <code className="rounded bg-muted px-1.5 py-0.5 text-xs">.env</code> in the
-          project root (copied to <code className="rounded bg-muted px-1.5 py-0.5 text-xs">web/.env</code>{" "}
-          on startup).
+          Tavily keys to{" "}
+          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">web/.env</code> (Next.js reads
+          this file).
         </p>
         <ol className="list-decimal space-y-1 pl-5">
           <li>
-            <code className="text-xs">cp .env.example .env</code>
+            <code className="text-xs">cp web/.env.example web/.env</code>
           </li>
           <li>
             Set{" "}
