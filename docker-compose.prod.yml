@@ -7,7 +7,8 @@ services:
 
   web:
     build:
-      context: ./web
+      context: .
+      dockerfile: web/Dockerfile
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://debate.paperiq.ai}
     container_name: debate-fact-checker-web

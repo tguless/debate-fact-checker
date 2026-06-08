@@ -16,10 +16,11 @@ export function AgentPageClient({ agentReady }: { agentReady: boolean }) {
       {!startedUrl ? (
         <Card>
           <CardHeader>
-            <CardTitle>Start agent run</CardTitle>
+            <CardTitle>Agent fact-check</CardTitle>
             <CardDescription>
-              The agent orchestrates fetch, search, read sources, verify claims, and record
-              verdicts — you watch every turn live.
+              Multi-turn verification with transcript RAG, web search, and full-page source reads.
+              Every tool call streams live below — do not use quick scan unless you only want English
+              keyword heuristics.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -36,7 +37,7 @@ export function AgentPageClient({ agentReady }: { agentReady: boolean }) {
               disabled={!agentReady || !url.trim()}
               onClick={() => setStartedUrl(url.trim())}
             >
-              Launch agent
+              Launch agent fact-check
             </button>
             {!agentReady ? (
               <p className="text-sm text-muted-foreground">

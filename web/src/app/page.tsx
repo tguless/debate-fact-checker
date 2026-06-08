@@ -67,7 +67,12 @@ export default async function HomePage() {
             {keyStatus.agentReady ? (
               <>
                 <AgentPageClient agentReady />
-                <AnalysisForm variant="secondary" />
+                <p className="text-sm text-muted-foreground">
+                  Offline English keyword scan only —{" "}
+                  <Link href="/quick" className="text-primary hover:underline">
+                    quick scan
+                  </Link>
+                </p>
               </>
             ) : (
               <AnalysisForm />

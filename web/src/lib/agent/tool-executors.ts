@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import type { ClaimVerdict, Prisma, RhetoricTechnique } from "@prisma/client";
 import { analyzeTranscript } from "@/lib/rhetoric/analyzer";
@@ -23,14 +23,27 @@ export type ToolContext = {
 };
 
 /** Cursor Agent Skills format — https://cursor.com/docs */
-const SKILL_PATH = path.join(
-  process.cwd(),
-  "..",
-  ".cursor",
-  "skills",
-  "debate-fact-check",
-  "SKILL.md",
-);
+async function resolveSkillPath(): Promise<string> {
+  if (process.env.AGENT_SKILL_PATH?.trim()) {
+    return process.env.AGENT_SKILL_PATH.trim();
+  }
+
+  const candidates = [
+    path.join(process.cwd(), "skills", "debate-fact-check", "SKILL.md"),
+    path.join(process.cwd(), "..", ".cursor", "skills", "debate-fact-check", "SKILL.md"),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // try next path (dev vs Docker layout)
+    }
+  }
+
+  throw new Error(`Agent skill not found. Tried: ${candidates.join(", ")}`);
+}
 
 export async function executeTool(
   name: string,
@@ -39,8 +52,9 @@ export async function executeTool(
 ): Promise<unknown> {
   switch (name) {
     case "read_skill": {
-      const content = await readFile(SKILL_PATH, "utf-8");
-      return { skill: content, format: "cursor-agent-skill" };
+      const skillPath = await resolveSkillPath();
+      const content = await readFile(skillPath, "utf-8");
+      return { skill: content, format: "cursor-agent-skill", path: skillPath };
     }
 
     case "fetch_transcript": {
