@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnalysisResults } from "@/components/analysis-results";
 import type { AgentTurn } from "@/components/agent-turn-timeline";
 import { isRunningStatus } from "@/lib/analysis-status";
+import type { PhaseMarker } from "@/lib/rhetoric/types";
+
+type AnalysisPayload = {
   id: string;
   videoUrl: string;
   videoId: string;
