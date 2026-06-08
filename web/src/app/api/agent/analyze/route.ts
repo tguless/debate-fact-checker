@@ -1,4 +1,5 @@
 import { runAgentAnalysis } from "@/lib/agent/run-agent";
+import { registerAgentRun, cancelAgentRun, unregisterAgentRun } from "@/lib/agent/run-registry";
 import { prisma } from "@/lib/prisma";
 import { extractVideoId } from "@/lib/youtube";
 import { z } from "zod";
@@ -40,6 +41,13 @@ export async function POST(request: Request) {
     },
   });
 
+  const runController = registerAgentRun(analysis.id);
+
+  const onClientDisconnect = () => {
+    cancelAgentRun(analysis.id);
+  };
+  request.signal.addEventListener("abort", onClientDisconnect);
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -47,7 +55,6 @@ export async function POST(request: Request) {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       };
 
-      // Keep connection alive through long tool calls (transcript fetch, read_url, etc.)
       const heartbeat = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(": ping\n\n"));
@@ -59,11 +66,18 @@ export async function POST(request: Request) {
       try {
         send("started", { analysisId: analysis.id, videoId });
 
-        for await (const event of runAgentAnalysis(analysis.id, videoId, videoUrl)) {
+        for await (const event of runAgentAnalysis(
+          analysis.id,
+          videoId,
+          videoUrl,
+          runController.signal,
+        )) {
           if (event.type === "turn") {
             send("turn", event.turn);
           } else if (event.type === "done") {
             send("done", { analysisId: event.analysisId });
+          } else if (event.type === "cancelled") {
+            send("cancelled", { analysisId: event.analysisId });
           } else if (event.type === "error") {
             send("error", { message: event.message });
           }
@@ -74,6 +88,8 @@ export async function POST(request: Request) {
         });
       } finally {
         clearInterval(heartbeat);
+        request.signal.removeEventListener("abort", onClientDisconnect);
+        unregisterAgentRun(analysis.id);
         controller.close();
       }
     },

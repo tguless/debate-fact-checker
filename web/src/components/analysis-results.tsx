@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentTurnTimeline, type AgentTurn } from "@/components/agent-turn-timeline";
+import { CancelAnalysisButton } from "@/components/cancel-analysis-button";
 import { ClaimList } from "@/components/claim-list";
 import { PhaseTimeline } from "@/components/phase-timeline";
 import { TechniqueScoreCard } from "@/components/technique-score-card";
@@ -56,9 +57,11 @@ type AnalysisPayload = {
 export function AnalysisResults({
   analysis,
   live = false,
+  onCancelled,
 }: {
   analysis: AnalysisPayload;
   live?: boolean;
+  onCancelled?: () => void;
 }) {
   const durationLabel = analysis.durationSeconds
     ? `${Math.floor(analysis.durationSeconds / 60)}m ${analysis.durationSeconds % 60}s`
@@ -68,12 +71,22 @@ export function AnalysisResults({
     <div className="flex flex-col gap-6">
       <Card className="border-primary/20 bg-gradient-to-br from-card to-muted/30">
         <CardHeader>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge>{analysis.status}</Badge>
-            {live ? <Badge variant="secondary">Live</Badge> : null}
-            {analysis.agentMode ? <Badge variant="secondary">Agent mode</Badge> : null}
-            <Badge variant="outline">{analysis.segmentCount} segments</Badge>
-            <Badge variant="outline">{durationLabel}</Badge>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge>{analysis.status}</Badge>
+              {live ? <Badge variant="secondary">Live</Badge> : null}
+              {analysis.agentMode ? <Badge variant="secondary">Agent mode</Badge> : null}
+              <Badge variant="outline">{analysis.segmentCount} segments</Badge>
+              <Badge variant="outline">{durationLabel}</Badge>
+            </div>
+            {live ? (
+              <CancelAnalysisButton
+                analysisId={analysis.id}
+                variant="destructive"
+                size="sm"
+                onCancelled={onCancelled}
+              />
+            ) : null}
           </div>
           <CardTitle className="font-heading text-2xl">Rhetoric analysis report</CardTitle>
           <CardDescription>

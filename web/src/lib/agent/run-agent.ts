@@ -8,6 +8,7 @@
 import { openai } from "@ai-sdk/openai";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import { prisma } from "@/lib/prisma";
+import { unregisterAgentRun } from "./run-registry";
 import { createAgentTools } from "./ai-tools";
 import { finalizeAnalysisOnStepLimit } from "./finalize-on-limit";
 import { persistTurn } from "./turn-persistence";
@@ -21,10 +22,24 @@ function resolveMaxSteps(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_STEPS;
 }
 
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === "AbortError") ||
+    (error instanceof Error && error.name === "AbortError")
+  );
+}
+
+function assertNotCancelled(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw new DOMException("Cancelled by user", "AbortError");
+  }
+}
+
 export async function* runAgentAnalysis(
   analysisId: string,
   videoId: string,
   videoUrl: string,
+  signal?: AbortSignal,
 ): AsyncGenerator<TurnEvent> {
   let turnIndex = 0;
   const ctx: ToolContext = {
@@ -65,14 +80,17 @@ Step budget: ${maxSteps} tool-loop steps. Each search/read/record counts.
   });
 
   try {
+    assertNotCancelled(signal);
     let finished = false;
     let stepText = "";
 
     const streamResult = await agent.stream({
       prompt: `Begin fact-check analysis for YouTube video ${videoId}. Read your skill, then work autonomously.`,
+      abortSignal: signal,
     });
 
     for await (const part of streamResult.fullStream) {
+      assertNotCancelled(signal);
       if (part.type === "text-delta") {
         stepText += part.text;
       }
@@ -159,6 +177,25 @@ Step budget: ${maxSteps} tool-loop steps. Each search/read/record counts.
     yield { type: "turn", turn: summaryTurn };
     yield { type: "done", analysisId };
   } catch (error) {
+    if (signal?.aborted || isAbortError(error)) {
+      await prisma.analysis.update({
+        where: { id: analysisId },
+        data: {
+          status: "CANCELLED",
+          errorMessage: "Cancelled by user",
+        },
+      });
+
+      const cancelTurn = await persistTurn(analysisId, turnIndex++, {
+        role: "SYSTEM",
+        turnType: "ERROR",
+        content: "Cancelled by user",
+      });
+      yield { type: "turn", turn: cancelTurn };
+      yield { type: "cancelled", analysisId };
+      return;
+    }
+
     const message = error instanceof Error ? error.message : "Agent run failed";
 
     await prisma.analysis.update({
@@ -173,5 +210,7 @@ Step budget: ${maxSteps} tool-loop steps. Each search/read/record counts.
     });
     yield { type: "turn", turn: errorTurn };
     yield { type: "error", message };
+  } finally {
+    unregisterAgentRun(analysisId);
   }
 }

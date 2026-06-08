@@ -9,7 +9,9 @@ import {
   WrenchIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
+import { CancelAnalysisButton } from "@/components/cancel-analysis-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -160,19 +162,25 @@ function parseSseChunk(chunk: string): { event: string; data: string } | null {
 export function AgentTurnTimelineLive({
   url,
   onStarted,
+  onCancelled,
 }: {
   url: string;
   onStarted?: (analysisId: string) => void;
+  onCancelled?: () => void;
 }) {
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "running" | "done" | "error" | "cancelled"
+  >("idle");
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!url) return;
 
     const abort = new AbortController();
+    abortRef.current = abort;
     setStatus("running");
     setTurns([]);
     setAnalysisId(null);
@@ -219,6 +227,11 @@ export function AgentTurnTimelineLive({
           } else if (parsedChunk.event === "done") {
             setAnalysisId(String(parsed.analysisId));
             setStatus("done");
+          } else if (parsedChunk.event === "cancelled") {
+            setAnalysisId(String(parsed.analysisId));
+            setStatus("cancelled");
+            setError("Cancelled by user");
+            onCancelled?.();
           } else if (parsedChunk.event === "error") {
             setError(String(parsed.message));
             setStatus("error");
@@ -230,13 +243,28 @@ export function AgentTurnTimelineLive({
     }
 
     run().catch((err) => {
-      if (abort.signal.aborted) return;
+      if (abort.signal.aborted) {
+        setStatus("cancelled");
+        setError("Cancelled by user");
+        onCancelled?.();
+        return;
+      }
       setError(err instanceof Error ? err.message : "Agent failed");
       setStatus("error");
     });
 
     return () => abort.abort();
-  }, [url, onStarted]);
+  }, [url, onStarted, onCancelled]);
+
+  async function handleCancelJob() {
+    if (analysisId) {
+      await fetch(`/api/analyses/${analysisId}/cancel`, { method: "POST" });
+    }
+    abortRef.current?.abort();
+    setStatus("cancelled");
+    setError("Cancelled by user");
+    onCancelled?.();
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -247,13 +275,37 @@ export function AgentTurnTimelineLive({
             Agent is working — turns stream in via SSE as each tool completes
           </div>
           {analysisId ? (
-            <Link
-              href={`/analyses/${analysisId}`}
-              className="text-primary hover:underline"
+            <>
+              <Link
+                href={`/analyses/${analysisId}`}
+                className="text-primary hover:underline"
+              >
+                Open live report page →
+              </Link>
+              <CancelAnalysisButton
+                analysisId={analysisId}
+                variant="destructive"
+                size="sm"
+                onCancelled={() => {
+                  abortRef.current?.abort();
+                  setStatus("cancelled");
+                  setError("Cancelled by user");
+                  onCancelled?.();
+                }}
+              />
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                handleCancelJob().catch(() => undefined);
+              }}
             >
-              Open live report page →
-            </Link>
-          ) : null}
+              Cancel job
+            </Button>
+          )}
         </div>
       ) : null}
       {status === "done" && analysisId ? (
@@ -267,7 +319,14 @@ export function AgentTurnTimelineLive({
           </Link>
         </div>
       ) : null}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {status === "cancelled" ? (
+        <p className="text-sm text-muted-foreground">Job cancelled.</p>
+      ) : null}
+      {error ? (
+        <p className={`text-sm ${status === "cancelled" ? "text-muted-foreground" : "text-destructive"}`}>
+          {error}
+        </p>
+      ) : null}
       <AgentTurnTimeline turns={turns} live={status === "running"} />
     </div>
   );

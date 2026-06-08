@@ -47,7 +47,13 @@ export function AgentPageClient({ agentReady }: { agentReady: boolean }) {
           </CardContent>
         </Card>
       ) : (
-        <AgentTurnTimelineLive url={startedUrl} />
+        <AgentTurnTimelineLive
+          url={startedUrl}
+          onCancelled={() => {
+            setStartedUrl(null);
+            setUrl("");
+          }}
+        />
       )}
     </>
   );

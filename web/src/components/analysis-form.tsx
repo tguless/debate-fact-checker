@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2Icon, SearchIcon } from "lucide-react";
+import { Loader2Icon, OctagonXIcon, SearchIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ export function AnalysisForm({ variant = "primary" }: { variant?: "primary" | "s
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,12 +21,15 @@ export function AnalysisForm({ variant = "primary" }: { variant?: "primary" | "s
       return;
     }
 
+    const abort = new AbortController();
+    abortRef.current = abort;
     setLoading(true);
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
+        signal: abort.signal,
       });
 
       const data = await response.json();
@@ -37,10 +41,20 @@ export function AnalysisForm({ variant = "primary" }: { variant?: "primary" | "s
       router.push(`/analyses/${data.analysis.id}`);
       router.refresh();
     } catch (error) {
+      if (abort.signal.aborted) {
+        toast.message("Quick scan cancelled");
+        return;
+      }
       toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setLoading(false);
+      abortRef.current = null;
     }
+  }
+
+  function handleCancel() {
+    abortRef.current?.abort();
+    setLoading(false);
   }
 
   const isSecondary = variant === "secondary";
@@ -96,6 +110,17 @@ export function AnalysisForm({ variant = "primary" }: { variant?: "primary" | "s
               </>
             )}
           </Button>
+          {loading ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12"
+              onClick={handleCancel}
+            >
+              <OctagonXIcon data-icon="inline-start" />
+              Cancel
+            </Button>
+          ) : null}
         </form>
       </CardContent>
     </Card>

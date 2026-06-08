@@ -3,9 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnalysisResults } from "@/components/analysis-results";
 import type { AgentTurn } from "@/components/agent-turn-timeline";
-import type { PhaseMarker } from "@/lib/rhetoric/types";
-
-type AnalysisPayload = {
+import { isRunningStatus } from "@/lib/analysis-status";
   id: string;
   videoUrl: string;
   videoId: string;
@@ -45,13 +43,19 @@ type AnalysisPayload = {
   }>;
 };
 
-const RUNNING_STATUSES = new Set(["PENDING", "AGENT_RUNNING"]);
-
 export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
   const [analysis, setAnalysis] = useState(initial);
   const latestTurnIndex = useRef(
     initial.turns?.length ? Math.max(...initial.turns.map((t) => t.turnIndex)) : -1,
   );
+
+  const handleCancelled = useCallback(() => {
+    setAnalysis((prev) => ({
+      ...prev,
+      status: "CANCELLED",
+      summary: "Cancelled by user",
+    }));
+  }, []);
 
   const poll = useCallback(async () => {
     const response = await fetch(
@@ -90,7 +94,7 @@ export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
   }, [initial.id]);
 
   useEffect(() => {
-    if (!RUNNING_STATUSES.has(analysis.status)) return;
+    if (!isRunningStatus(analysis.status)) return;
 
     const interval = setInterval(() => {
       poll().catch(() => undefined);
@@ -101,5 +105,11 @@ export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
     return () => clearInterval(interval);
   }, [analysis.status, poll]);
 
-  return <AnalysisResults analysis={analysis} live={RUNNING_STATUSES.has(analysis.status)} />;
+  return (
+    <AnalysisResults
+      analysis={analysis}
+      live={isRunningStatus(analysis.status)}
+      onCancelled={handleCancelled}
+    />
+  );
 }

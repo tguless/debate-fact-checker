@@ -13,4 +13,5 @@ export type AgentTurnPayload = {
 export type TurnEvent =
   | { type: "turn"; turn: AgentTurnPayload }
   | { type: "done"; analysisId: string }
+  | { type: "cancelled"; analysisId: string }
   | { type: "error"; message: string };
