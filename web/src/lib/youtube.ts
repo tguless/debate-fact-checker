@@ -101,25 +101,21 @@ function mapTranscriptSegments(
   });
 }
 
-export async function fetchVideoTitle(videoId: string): Promise<string | null> {
-  const meta = await fetchVideoMetadata(videoId);
-  return meta.title;
-}
-
-export function youtubeThumbnailUrl(
-  videoId: string,
-  quality: "default" | "hq" | "mq" = "hq",
-): string {
-  const file = quality === "default" ? "default" : quality === "mq" ? "mqdefault" : "hqdefault";
-  return `https://i.ytimg.com/vi/${videoId}/${file}.jpg`;
-}
-
 export type VideoMetadata = {
   title: string | null;
   channelName: string | null;
   channelUrl: string | null;
   thumbnailUrl: string;
 };
+
+function youtubeThumbnailUrl(videoId: string): string {
+  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+export async function fetchVideoTitle(videoId: string): Promise<string | null> {
+  const meta = await fetchVideoMetadata(videoId);
+  return meta.title;
+}
 
 export async function fetchVideoMetadata(videoId: string): Promise<VideoMetadata> {
   const fallbackThumbnail = youtubeThumbnailUrl(videoId);

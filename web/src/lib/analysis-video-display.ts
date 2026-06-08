@@ -1,21 +1,27 @@
-import { youtubeThumbnailUrl } from "@/lib/youtube";
+export function youtubeThumbnailUrl(
+  videoId: string,
+  quality: "default" | "hq" | "mq" = "hq",
+): string {
+  const file = quality === "default" ? "default" : quality === "mq" ? "mqdefault" : "hqdefault";
+  return `https://i.ytimg.com/vi/${videoId}/${file}.jpg`;
+}
 
-type VideoDisplayInput = {
+export function resolveAnalysisThumbnail(input: {
   videoId: string;
-  title?: string | null;
-  channelName?: string | null;
-  channelUrl?: string | null;
   thumbnailUrl?: string | null;
-};
-
-export function resolveAnalysisThumbnail(input: VideoDisplayInput): string {
+}): string {
   return input.thumbnailUrl?.trim() || youtubeThumbnailUrl(input.videoId);
 }
 
-export function resolveAnalysisTitle(input: VideoDisplayInput): string {
+export function resolveAnalysisTitle(input: {
+  videoId: string;
+  title?: string | null;
+}): string {
   return input.title?.trim() || input.videoId;
 }
 
-export function resolveAnalysisChannel(input: VideoDisplayInput): string | null {
+export function resolveAnalysisChannel(input: {
+  channelName?: string | null;
+}): string | null {
   return input.channelName?.trim() || null;
 }
