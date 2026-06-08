@@ -1,0 +1,25 @@
+# Production overlay for eyesense home server.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  postgres:
+    ports: []
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://debate.paperiq.ai}
+    container_name: debate-fact-checker-web
+    restart: unless-stopped
+    ports:
+      - "8912:3000"
+    env_file:
+      - path: .env.local
+        required: true
+    environment:
+      DATABASE_URL: postgresql://dfc:dfc_dev_password@postgres:5432/debate_fact_checker?schema=public
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://debate.paperiq.ai}
+    depends_on:
+      postgres:
+        condition: service_healthy

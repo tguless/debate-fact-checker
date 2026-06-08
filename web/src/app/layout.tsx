@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { rootMetadata } from "@/lib/metadata";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,11 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Debate Fact Checker",
-  description:
-    "Analyze YouTube debate monologues for Gish Gallop, firehosing, and statistical distortion.",
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({
   children,
