@@ -64,8 +64,8 @@ export function ClaimList({ claims }: { claims: Claim[] }) {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
-            <p className="leading-relaxed text-foreground">{claim.text}</p>
-            <p className="leading-relaxed text-muted-foreground">{claim.reasoning}</p>
+            <p className="leading-relaxed break-words text-foreground">{claim.text}</p>
+            <p className="leading-relaxed break-words text-muted-foreground">{claim.reasoning}</p>
           </CardContent>
         </Card>
       ))}

@@ -28,7 +28,7 @@ export default async function HomePage() {
     <main className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.16),transparent_35%)]" />
 
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
+      <div className="relative mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-8 px-6 py-10">
         <header className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">Next.js + Postgres</Badge>
@@ -63,7 +63,7 @@ export default async function HomePage() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <div className="flex flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6">
             {keyStatus.agentReady ? (
               <>
                 <AgentPageClient agentReady />

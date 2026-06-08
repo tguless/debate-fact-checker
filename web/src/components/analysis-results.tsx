@@ -69,7 +69,7 @@ export function AnalysisResults({
     : "Unknown";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-6">
       <Card className="border-primary/20 bg-gradient-to-br from-card to-muted/30">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -92,13 +92,13 @@ export function AnalysisResults({
           <CardTitle className="font-heading text-2xl">
             {analysis.title ?? "Rhetoric analysis report"}
           </CardTitle>
-          <CardDescription className="flex flex-col gap-1">
+          <CardDescription className="flex min-w-0 flex-col gap-1">
             <span className="font-mono text-xs text-muted-foreground">{analysis.videoId}</span>
             <a
               href={analysis.videoUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-primary hover:underline"
+              className="break-all text-primary hover:underline"
             >
               {analysis.videoUrl}
             </a>
@@ -163,17 +163,21 @@ export function AnalysisResults({
           analysis.agentMode && (analysis.turns?.length || live) ? "turns" : "techniques"
         }
       >
-        <TabsList>
-          {analysis.agentMode && analysis.turns?.length ? (
-            <TabsTrigger value="turns">Agent turns ({analysis.turns.length})</TabsTrigger>
-          ) : null}
-          <TabsTrigger value="techniques">Techniques</TabsTrigger>
-          <TabsTrigger value="claims">Flagged claims ({analysis.claims.length})</TabsTrigger>
-          <TabsTrigger value="transcript">Transcript</TabsTrigger>
-        </TabsList>
+        <div className="max-w-full overflow-x-auto">
+          <TabsList>
+            {analysis.agentMode && (analysis.turns?.length || live) ? (
+              <TabsTrigger value="turns">
+                Agent turns ({analysis.turns?.length ?? 0})
+              </TabsTrigger>
+            ) : null}
+            <TabsTrigger value="techniques">Techniques</TabsTrigger>
+            <TabsTrigger value="claims">Flagged claims ({analysis.claims.length})</TabsTrigger>
+            <TabsTrigger value="transcript">Transcript</TabsTrigger>
+          </TabsList>
+        </div>
 
         {analysis.agentMode && (analysis.turns?.length || live) ? (
-          <TabsContent value="turns" className="mt-4">
+          <TabsContent value="turns" className="mt-4 min-w-0">
             <AgentTurnTimeline turns={analysis.turns ?? []} live={live} />
           </TabsContent>
         ) : null}

@@ -25,7 +25,7 @@ export function PhaseTimeline({ phases }: { phases: PhaseMarker[] }) {
                   <div className="mt-1 w-px flex-1 bg-border" />
                 ) : null}
               </div>
-              <div className="flex flex-1 flex-col gap-2 pb-4">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 pb-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{phase.phase}</span>
                   <Badge variant="outline">[{phase.timestamp}]</Badge>
@@ -35,7 +35,7 @@ export function PhaseTimeline({ phases }: { phases: PhaseMarker[] }) {
                 </div>
                 <p className="text-sm text-muted-foreground">{phase.description}</p>
                 {phase.trigger ? (
-                  <p className="font-mono text-xs text-primary">
+                  <p className="break-words font-mono text-xs text-primary">
                     Trigger: &quot;{phase.trigger}&quot;
                   </p>
                 ) : null}

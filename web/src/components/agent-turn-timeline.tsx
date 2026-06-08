@@ -43,13 +43,16 @@ const turnTypeLabel: Record<string, string> = {
   ERROR: "Error",
 };
 
+const toolOutputPreClassName =
+  "min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-md bg-muted/50 p-3 text-xs leading-relaxed whitespace-pre-wrap break-words";
+
 function TurnBody({ turn }: { turn: AgentTurn }) {
   if (turn.turnType === "TOOL_CALL" && turn.toolName) {
     return (
       <div className="flex flex-col gap-2">
         <p className="font-mono text-sm text-primary">{turn.toolName}</p>
         {turn.toolInput ? (
-          <pre className="max-h-48 overflow-auto rounded-md bg-muted/50 p-3 text-xs">
+          <pre className={`max-h-48 ${toolOutputPreClassName}`}>
             {JSON.stringify(turn.toolInput, null, 2)}
           </pre>
         ) : null}
@@ -59,7 +62,7 @@ function TurnBody({ turn }: { turn: AgentTurn }) {
 
   if (turn.turnType === "TOOL_RESULT") {
     return (
-      <pre className="max-h-64 overflow-auto rounded-md bg-muted/50 p-3 text-xs leading-relaxed">
+      <pre className={`max-h-64 ${toolOutputPreClassName}`}>
         {turn.content ??
           (turn.toolOutput ? JSON.stringify(turn.toolOutput, null, 2) : "No output")}
       </pre>
@@ -67,7 +70,7 @@ function TurnBody({ turn }: { turn: AgentTurn }) {
   }
 
   if (turn.content) {
-    return <p className="text-sm leading-relaxed whitespace-pre-wrap">{turn.content}</p>;
+    return <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{turn.content}</p>;
   }
 
   return null;
@@ -90,7 +93,7 @@ export function AgentTurnTimeline({
     <Card className="border-border/60 bg-card/70">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <CardTitle className="text-base">Agent turns</CardTitle>
             <CardDescription>
               Vercel AI SDK ToolLoopAgent — the agent orchestrates its own sequence via the Cursor
@@ -108,7 +111,7 @@ export function AgentTurnTimeline({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex max-h-[700px] flex-col gap-4 overflow-y-auto pr-2">
+        <div className="flex max-h-[700px] min-w-0 flex-col gap-4 overflow-x-hidden overflow-y-auto pr-2">
           {turns.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Waiting for agent to start...
@@ -270,14 +273,14 @@ export function AgentTurnTimelineLive({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       {status === "running" ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           {videoTitle ? (
-            <p className="text-sm font-medium leading-snug">{videoTitle}</p>
+            <p className="break-words text-sm font-medium leading-snug">{videoTitle}</p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-2">
             <Loader2Icon className="size-4 animate-spin" />
             Agent is working — turns stream in via SSE as each tool completes
           </div>

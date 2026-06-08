@@ -33,7 +33,7 @@ export default async function AnalysisPage({ params }: PageProps) {
   return (
     <main className="relative min-h-screen">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_45%)]" />
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8">
+      <div className="relative mx-auto flex w-full min-w-0 max-w-6xl flex-col gap-6 px-6 py-8">
         <Link href="/" className={cn(buttonVariants({ variant: "ghost" }), "w-fit")}>
           <ArrowLeftIcon data-icon="inline-start" />
           Back to home
