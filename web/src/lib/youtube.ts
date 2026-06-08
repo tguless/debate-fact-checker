@@ -102,18 +102,61 @@ function mapTranscriptSegments(
 }
 
 export async function fetchVideoTitle(videoId: string): Promise<string | null> {
+  const meta = await fetchVideoMetadata(videoId);
+  return meta.title;
+}
+
+export function youtubeThumbnailUrl(
+  videoId: string,
+  quality: "default" | "hq" | "mq" = "hq",
+): string {
+  const file = quality === "default" ? "default" : quality === "mq" ? "mqdefault" : "hqdefault";
+  return `https://i.ytimg.com/vi/${videoId}/${file}.jpg`;
+}
+
+export type VideoMetadata = {
+  title: string | null;
+  channelName: string | null;
+  channelUrl: string | null;
+  thumbnailUrl: string;
+};
+
+export async function fetchVideoMetadata(videoId: string): Promise<VideoMetadata> {
+  const fallbackThumbnail = youtubeThumbnailUrl(videoId);
+
   try {
     const response = await fetch(
       `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`,
     );
     if (!response.ok) {
-      return null;
+      return {
+        title: null,
+        channelName: null,
+        channelUrl: null,
+        thumbnailUrl: fallbackThumbnail,
+      };
     }
 
-    const data = (await response.json()) as { title?: string };
-    return data.title?.trim() ?? null;
+    const data = (await response.json()) as {
+      title?: string;
+      author_name?: string;
+      author_url?: string;
+      thumbnail_url?: string;
+    };
+
+    return {
+      title: data.title?.trim() ?? null,
+      channelName: data.author_name?.trim() ?? null,
+      channelUrl: data.author_url?.trim() ?? null,
+      thumbnailUrl: data.thumbnail_url?.trim() ?? fallbackThumbnail,
+    };
   } catch {
-    return null;
+    return {
+      title: null,
+      channelName: null,
+      channelUrl: null,
+      thumbnailUrl: fallbackThumbnail,
+    };
   }
 }
 

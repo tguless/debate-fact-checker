@@ -55,6 +55,9 @@ model Analysis {
   videoUrl        String
   videoId         String
   title           String?
+  channelName     String?
+  channelUrl      String?
+  thumbnailUrl    String?
   status          AnalysisStatus @default(PENDING)
   errorMessage    String?
   fullText        String?        @db.Text
@@ -75,6 +78,7 @@ model Analysis {
 
   @@index([videoId])
   @@index([createdAt])
+  @@index([channelName])
 }
 
 model TranscriptSegment {

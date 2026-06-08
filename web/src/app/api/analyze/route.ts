@@ -7,7 +7,7 @@ import {
   buildFullText,
   estimateDurationSeconds,
   extractVideoId,
-  fetchVideoTitle,
+  fetchVideoMetadata,
   getTranscript,
 } from "@/lib/youtube";
 
@@ -46,9 +46,9 @@ export async function POST(request: Request) {
     });
 
     try {
-      const [{ segments, lang }, title] = await Promise.all([
+      const [{ segments, lang }, metadata] = await Promise.all([
         getTranscript(videoId),
-        fetchVideoTitle(videoId),
+        fetchVideoMetadata(videoId),
       ]);
       const fullText = buildFullText(segments);
       const durationSeconds = estimateDurationSeconds(segments);
@@ -57,7 +57,10 @@ export async function POST(request: Request) {
         where: { id: analysis.id },
         data: {
           status: "ANALYZING",
-          title,
+          title: metadata.title,
+          channelName: metadata.channelName,
+          channelUrl: metadata.channelUrl,
+          thumbnailUrl: metadata.thumbnailUrl,
           fullText,
           durationSeconds,
           segmentCount: segments.length,

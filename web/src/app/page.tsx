@@ -1,28 +1,16 @@
 import Link from "next/link";
-import { ShieldAlertIcon, WavesIcon } from "lucide-react";
+import { ShieldAlertIcon } from "lucide-react";
 import { AgentPageClient } from "@/app/agent/agent-page-client";
 import { AnalysisForm } from "@/components/analysis-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RecentAnalysesCard } from "@/components/recent-analyses-card";
 import { getApiKeyStatus } from "@/lib/env-status";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const keyStatus = getApiKeyStatus();
-  const recent = await prisma.analysis.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 6,
-    select: {
-      id: true,
-      videoId: true,
-      status: true,
-      overallScore: true,
-      agentMode: true,
-      createdAt: true,
-    },
-  });
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -96,40 +84,7 @@ export default async function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/60 bg-card/70">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <WavesIcon className="size-4" />
-                  Recent analyses
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {recent.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No analyses yet. Run your first URL.</p>
-                ) : (
-                  recent.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/analyses/${item.id}`}
-                      className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm transition-colors hover:bg-muted/50"
-                    >
-                      <span className="font-mono text-xs">{item.videoId}</span>
-                      <div className="flex items-center gap-2">
-                        {item.agentMode ? (
-                          <Badge variant="secondary">Agent</Badge>
-                        ) : null}
-                        <Badge variant="outline">{item.status}</Badge>
-                        {item.overallScore ? (
-                          <span className="text-muted-foreground">
-                            {Math.round(item.overallScore)}/100
-                          </span>
-                        ) : null}
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+            <RecentAnalysesCard />
           </div>
         </div>
       </div>

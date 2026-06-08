@@ -10,7 +10,7 @@ import {
 import {
   buildFullText,
   estimateDurationSeconds,
-  fetchVideoTitle,
+  fetchVideoMetadata,
   getTranscript,
   type TranscriptSegment,
 } from "@/lib/youtube";
@@ -68,7 +68,7 @@ export async function executeTool(
       const segments = ctx.segments;
       ctx.fullText = buildFullText(segments);
       const durationSeconds = estimateDurationSeconds(segments);
-      const title = await fetchVideoTitle(ctx.videoId);
+      const metadata = await fetchVideoMetadata(ctx.videoId);
 
       await prisma.transcriptSegment.deleteMany({ where: { analysisId: ctx.analysisId } });
       await prisma.transcriptSegment.createMany({
@@ -87,7 +87,10 @@ export async function executeTool(
       await prisma.analysis.update({
         where: { id: ctx.analysisId },
         data: {
-          title,
+          title: metadata.title,
+          channelName: metadata.channelName,
+          channelUrl: metadata.channelUrl,
+          thumbnailUrl: metadata.thumbnailUrl,
           fullText: ctx.fullText,
           segmentCount: segments.length,
           durationSeconds,
@@ -100,7 +103,8 @@ export async function executeTool(
         durationMinutes: Math.round(durationSeconds / 60),
         ragChunks: rag.chunkCount,
         transcriptLang,
-        title,
+        title: metadata.title,
+        channelName: metadata.channelName,
         preview: segments
           .slice(0, 12)
           .map((s) => `[${s.timestamp}] ${s.text}`)
