@@ -5,7 +5,8 @@ import { HistoryPagination } from "@/components/history-pagination";
 import { HistoryToolbar } from "@/components/history-toolbar";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { queryAnalysisHistory, type HistoryQueryInput } from "@/lib/history-query";
+import { queryAnalysisHistory } from "@/lib/history-query";
+import type { HistoryQueryInput } from "@/lib/history-types";
 
 export const dynamic = "force-dynamic";
 

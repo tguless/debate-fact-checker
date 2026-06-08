@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { HISTORY_PAGE_SIZE, buildHistorySearchParams, type HistoryQueryInput } from "@/lib/history-query";
+import { HISTORY_PAGE_SIZE, buildHistorySearchParams } from "@/lib/history-query";
+import type { HistoryQueryInput } from "@/lib/history-types";
 
 export function HistoryPagination({
   filters,

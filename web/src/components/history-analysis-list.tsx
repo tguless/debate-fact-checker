@@ -10,7 +10,7 @@ import {
   resolveAnalysisTitle,
 } from "@/lib/analysis-video-display";
 import { DeleteAnalysisButton } from "@/components/delete-analysis-button";
-import type { HistoryListItem } from "@/lib/history-query";
+import type { HistoryListItem } from "@/lib/history-types";
 
 function formatDuration(seconds: number | null): string | null {
   if (!seconds || seconds <= 0) return null;

@@ -2,7 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { HISTORY_SORT_OPTIONS, type HistoryQueryInput } from "@/lib/history-query";
+import { HISTORY_SORT_OPTIONS } from "@/lib/history-query";
+import type { HistoryQueryInput } from "@/lib/history-types";
 
 const STATUS_OPTIONS = [
   { value: "ALL", label: "All statuses" },

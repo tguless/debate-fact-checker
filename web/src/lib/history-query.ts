@@ -1,5 +1,8 @@
 import type { AnalysisStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { HistoryListItem, HistoryQueryInput } from "@/lib/history-types";
+
+export type { HistoryListItem, HistoryQueryInput } from "@/lib/history-types";
 
 export const HISTORY_PAGE_SIZE = 10;
 
@@ -12,32 +15,6 @@ export const HISTORY_SORT_OPTIONS = [
 ] as const;
 
 export type HistorySort = (typeof HISTORY_SORT_OPTIONS)[number]["value"];
-
-export type HistoryQueryInput = {
-  q?: string;
-  status?: string;
-  mode?: string;
-  sort?: string;
-  page?: string | number;
-};
-
-export type HistoryListItem = {
-  id: string;
-  videoId: string;
-  videoUrl: string;
-  title: string | null;
-  channelName: string | null;
-  channelUrl: string | null;
-  thumbnailUrl: string | null;
-  status: AnalysisStatus;
-  overallScore: number | null;
-  segmentCount: number;
-  durationSeconds: number | null;
-  summary: string | null;
-  agentMode: boolean;
-  createdAt: string;
-  claimCount: number;
-};
 
 export type HistoryQueryResult = {
   items: HistoryListItem[];
