@@ -170,6 +170,7 @@ export function AgentTurnTimelineLive({
 }) {
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [status, setStatus] = useState<
     "idle" | "running" | "done" | "error" | "cancelled"
   >("idle");
@@ -184,6 +185,7 @@ export function AgentTurnTimelineLive({
     setStatus("running");
     setTurns([]);
     setAnalysisId(null);
+    setVideoTitle(null);
     setError(null);
 
     async function run() {
@@ -221,6 +223,7 @@ export function AgentTurnTimelineLive({
           if (parsedChunk.event === "started") {
             const id = String(parsed.analysisId);
             setAnalysisId(id);
+            setVideoTitle(typeof parsed.title === "string" ? parsed.title : null);
             onStarted?.(id);
           } else if (parsedChunk.event === "turn") {
             setTurns((prev) => [...prev, parsed as unknown as AgentTurn]);
@@ -269,7 +272,11 @@ export function AgentTurnTimelineLive({
   return (
     <div className="flex flex-col gap-4">
       {status === "running" ? (
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-2">
+          {videoTitle ? (
+            <p className="text-sm font-medium leading-snug">{videoTitle}</p>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Loader2Icon className="size-4 animate-spin" />
             Agent is working — turns stream in via SSE as each tool completes
@@ -306,6 +313,7 @@ export function AgentTurnTimelineLive({
               Cancel job
             </Button>
           )}
+          </div>
         </div>
       ) : null}
       {status === "done" && analysisId ? (

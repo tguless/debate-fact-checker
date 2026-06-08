@@ -10,6 +10,7 @@ type AnalysisPayload = {
   id: string;
   videoUrl: string;
   videoId: string;
+  title?: string | null;
   status: string;
   overallScore: number | null;
   summary: string | null;

@@ -1,7 +1,7 @@
 import { runAgentAnalysis } from "@/lib/agent/run-agent";
 import { registerAgentRun, cancelAgentRun, unregisterAgentRun } from "@/lib/agent/run-registry";
 import { prisma } from "@/lib/prisma";
-import { extractVideoId } from "@/lib/youtube";
+import { extractVideoId, fetchVideoTitle } from "@/lib/youtube";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -31,11 +31,13 @@ export async function POST(request: Request) {
   }
 
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const title = await fetchVideoTitle(videoId);
 
   const analysis = await prisma.analysis.create({
     data: {
       videoUrl,
       videoId,
+      title,
       status: "PENDING",
       agentMode: true,
     },
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
       }, 10_000);
 
       try {
-        send("started", { analysisId: analysis.id, videoId });
+        send("started", { analysisId: analysis.id, videoId, title });
 
         for await (const event of runAgentAnalysis(
           analysis.id,

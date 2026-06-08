@@ -7,6 +7,7 @@ import {
   buildFullText,
   estimateDurationSeconds,
   extractVideoId,
+  fetchVideoTitle,
   getTranscript,
 } from "@/lib/youtube";
 
@@ -45,7 +46,10 @@ export async function POST(request: Request) {
     });
 
     try {
-      const segments = await getTranscript(videoId);
+      const [{ segments, lang }, title] = await Promise.all([
+        getTranscript(videoId),
+        fetchVideoTitle(videoId),
+      ]);
       const fullText = buildFullText(segments);
       const durationSeconds = estimateDurationSeconds(segments);
 
@@ -53,6 +57,7 @@ export async function POST(request: Request) {
         where: { id: analysis.id },
         data: {
           status: "ANALYZING",
+          title,
           fullText,
           durationSeconds,
           segmentCount: segments.length,
@@ -106,7 +111,10 @@ export async function POST(request: Request) {
           overallScore: result.overallScore,
           summary: result.summary,
           phases: result.phases as Prisma.InputJsonValue,
-          metrics: result.metrics as Prisma.InputJsonValue,
+          metrics: {
+            ...result.metrics,
+            transcriptLang: lang,
+          } as Prisma.InputJsonValue,
         },
         include: {
           findings: { orderBy: { score: "desc" } },

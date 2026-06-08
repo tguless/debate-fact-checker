@@ -10,6 +10,7 @@ import {
 import {
   buildFullText,
   estimateDurationSeconds,
+  fetchVideoTitle,
   getTranscript,
   type TranscriptSegment,
 } from "@/lib/youtube";
@@ -58,10 +59,16 @@ export async function executeTool(
     }
 
     case "fetch_transcript": {
-      const segments = ctx.segments.length > 0 ? ctx.segments : await getTranscript(ctx.videoId);
-      ctx.segments = segments;
+      let transcriptLang = "cached";
+      if (ctx.segments.length === 0) {
+        const fetched = await getTranscript(ctx.videoId);
+        ctx.segments = fetched.segments;
+        transcriptLang = fetched.lang;
+      }
+      const segments = ctx.segments;
       ctx.fullText = buildFullText(segments);
       const durationSeconds = estimateDurationSeconds(segments);
+      const title = await fetchVideoTitle(ctx.videoId);
 
       await prisma.transcriptSegment.deleteMany({ where: { analysisId: ctx.analysisId } });
       await prisma.transcriptSegment.createMany({
@@ -80,6 +87,7 @@ export async function executeTool(
       await prisma.analysis.update({
         where: { id: ctx.analysisId },
         data: {
+          title,
           fullText: ctx.fullText,
           segmentCount: segments.length,
           durationSeconds,
@@ -91,11 +99,13 @@ export async function executeTool(
         durationSeconds,
         durationMinutes: Math.round(durationSeconds / 60),
         ragChunks: rag.chunkCount,
+        transcriptLang,
+        title,
         preview: segments
           .slice(0, 12)
           .map((s) => `[${s.timestamp}] ${s.text}`)
           .join("\n"),
-        note: "Transcript indexed for LangChain RAG. Use search_transcript_rag for semantic retrieval.",
+        note: `Transcript indexed for LangChain RAG (${transcriptLang}). Use search_transcript_rag for semantic retrieval.`,
       };
     }
 

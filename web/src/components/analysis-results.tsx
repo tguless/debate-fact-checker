@@ -18,6 +18,7 @@ type AnalysisPayload = {
   id: string;
   videoUrl: string;
   videoId: string;
+  title?: string | null;
   status: string;
   overallScore: number | null;
   summary: string | null;
@@ -88,8 +89,11 @@ export function AnalysisResults({
               />
             ) : null}
           </div>
-          <CardTitle className="font-heading text-2xl">Rhetoric analysis report</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-heading text-2xl">
+            {analysis.title ?? "Rhetoric analysis report"}
+          </CardTitle>
+          <CardDescription className="flex flex-col gap-1">
+            <span className="font-mono text-xs text-muted-foreground">{analysis.videoId}</span>
             <a
               href={analysis.videoUrl}
               target="_blank"
