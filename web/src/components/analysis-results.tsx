@@ -170,29 +170,19 @@ export function AnalysisResults({
         </Card>
       ) : null}
 
-      <Tabs
-        defaultValue={
-          analysis.agentMode && (analysis.turns?.length || live) ? "turns" : "techniques"
-        }
-      >
+      <Tabs defaultValue="techniques">
         <div className="max-w-full overflow-x-auto">
           <TabsList>
+            <TabsTrigger value="techniques">Techniques</TabsTrigger>
+            <TabsTrigger value="claims">Flagged claims ({analysis.claims.length})</TabsTrigger>
+            <TabsTrigger value="transcript">Transcript</TabsTrigger>
             {analysis.agentMode && (analysis.turns?.length || live) ? (
               <TabsTrigger value="turns">
                 Agent turns ({analysis.turns?.length ?? 0})
               </TabsTrigger>
             ) : null}
-            <TabsTrigger value="techniques">Techniques</TabsTrigger>
-            <TabsTrigger value="claims">Flagged claims ({analysis.claims.length})</TabsTrigger>
-            <TabsTrigger value="transcript">Transcript</TabsTrigger>
           </TabsList>
         </div>
-
-        {analysis.agentMode && (analysis.turns?.length || live) ? (
-          <TabsContent value="turns" className="mt-4 min-w-0">
-            <AgentTurnTimeline turns={analysis.turns ?? []} live={live} />
-          </TabsContent>
-        ) : null}
 
         <TabsContent value="techniques" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -233,6 +223,12 @@ export function AnalysisResults({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {analysis.agentMode && (analysis.turns?.length || live) ? (
+          <TabsContent value="turns" className="mt-4 min-w-0">
+            <AgentTurnTimeline turns={analysis.turns ?? []} live={live} />
+          </TabsContent>
+        ) : null}
       </Tabs>
 
       {!live && analysis.status === "COMPLETED" ? (
