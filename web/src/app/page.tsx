@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { ShieldAlertIcon, WavesIcon } from "lucide-react";
+import { AgentPageClient } from "@/app/agent/agent-page-client";
 import { AnalysisForm } from "@/components/analysis-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getApiKeyStatus } from "@/lib/env-status";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  const keyStatus = getApiKeyStatus();
   const recent = await prisma.analysis.findMany({
     orderBy: { createdAt: "desc" },
     take: 6,
@@ -16,6 +19,7 @@ export default async function HomePage() {
       videoId: true,
       status: true,
       overallScore: true,
+      agentMode: true,
       createdAt: true,
     },
   });
@@ -28,10 +32,20 @@ export default async function HomePage() {
         <header className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">Next.js + Postgres</Badge>
-            <Badge variant="outline">Heuristic rhetoric audit</Badge>
-            <Link href="/agent" className="text-sm text-primary hover:underline">
-              Agent fact-check →
-            </Link>
+            {keyStatus.agentReady ? (
+              <Badge variant="outline">Agent fact-check enabled</Badge>
+            ) : (
+              <Badge variant="outline">Heuristic rhetoric audit</Badge>
+            )}
+            {keyStatus.agentReady ? (
+              <Link href="/agent" className="text-sm text-primary hover:underline">
+                Agent page →
+              </Link>
+            ) : (
+              <Link href="/agent" className="text-sm text-primary hover:underline">
+                Agent fact-check →
+              </Link>
+            )}
             <Link href="/history" className="text-sm text-primary hover:underline">
               History →
             </Link>
@@ -41,15 +55,24 @@ export default async function HomePage() {
               Debate Fact Checker
             </h1>
             <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">
-              Turn a YouTube monologue into a structured audit of misleading debate tactics —
-              Gish Gallop density, firehose repetition, correlation-to-causation leaps, and
-              unsourced statistics.
+              {keyStatus.agentReady
+                ? "Paste a YouTube debate or monologue. The agent fetches the transcript, searches primary sources, and streams live fact-check turns with citeable verdicts."
+                : "Turn a YouTube monologue into a structured audit of misleading debate tactics — Gish Gallop density, firehose repetition, correlation-to-causation leaps, and unsourced statistics."}
             </p>
           </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <AnalysisForm />
+          <div className="flex flex-col gap-6">
+            {keyStatus.agentReady ? (
+              <>
+                <AgentPageClient agentReady />
+                <AnalysisForm variant="secondary" />
+              </>
+            ) : (
+              <AnalysisForm />
+            )}
+          </div>
 
           <div className="flex flex-col gap-4">
             <Card className="border-border/60 bg-card/70">
@@ -87,6 +110,9 @@ export default async function HomePage() {
                     >
                       <span className="font-mono text-xs">{item.videoId}</span>
                       <div className="flex items-center gap-2">
+                        {item.agentMode ? (
+                          <Badge variant="secondary">Agent</Badge>
+                        ) : null}
                         <Badge variant="outline">{item.status}</Badge>
                         {item.overallScore ? (
                           <span className="text-muted-foreground">

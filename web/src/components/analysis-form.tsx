@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export function AnalysisForm() {
+export function AnalysisForm({ variant = "primary" }: { variant?: "primary" | "secondary" }) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,16 +43,35 @@ export function AnalysisForm() {
     }
   }
 
+  const isSecondary = variant === "secondary";
+
   return (
-    <Card className="border-border/60 bg-card/80 shadow-xl backdrop-blur">
+    <Card
+      className={
+        isSecondary
+          ? "border-border/60 bg-card/60"
+          : "border-border/60 bg-card/80 shadow-xl backdrop-blur"
+      }
+    >
       <CardHeader>
-        <CardTitle className="font-heading text-2xl">Analyze a debate or monologue</CardTitle>
+        <CardTitle className={isSecondary ? "text-lg" : "font-heading text-2xl"}>
+          {isSecondary ? "Quick scan (offline heuristics)" : "Analyze a debate or monologue"}
+        </CardTitle>
         <CardDescription>
-          Quick heuristic scan — no API keys needed. For source-verified fact-checking, use{" "}
-          <a href="/agent" className="text-primary hover:underline">
-            Agent mode
-          </a>{" "}
-          (requires your OpenAI + Tavily keys in <code className="text-xs">web/.env</code>).
+          {isSecondary ? (
+            <>
+              English keyword patterns only — skips LLM fact-checking. Use agent mode above for
+              source-verified analysis (works on any language).
+            </>
+          ) : (
+            <>
+              Quick heuristic scan — no API keys needed. For source-verified fact-checking, use{" "}
+              <a href="/agent" className="text-primary hover:underline">
+                Agent mode
+              </a>{" "}
+              (requires your OpenAI + Tavily keys in <code className="text-xs">web/.env</code>).
+            </>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
