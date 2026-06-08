@@ -31,12 +31,7 @@ export function extractVideoId(input: string): string | null {
     return trimmed;
   }
 
-  const fromUrl = extractVideoIdFromUrl(trimmed);
-  if (fromUrl) {
-    return fromUrl;
-  }
-
-  return trimmed.match(YOUTUBE_ID_REGEX)?.[1] ?? null;
+  return extractVideoIdFromUrl(trimmed);
 }
 
 function extractVideoIdFromUrl(trimmed: string): string | null {
@@ -70,10 +65,11 @@ function extractVideoIdFromUrl(trimmed: string): string | null {
       }
     }
   } catch {
-    return null;
+    // Not a parseable URL — try regex on raw text (embedded links, partial URLs).
   }
 
-  return null;
+  const regexMatch = YOUTUBE_ID_REGEX.exec(trimmed);
+  return regexMatch?.[1] ?? null;
 }
 
 export function formatTimestamp(ms: number): string {
