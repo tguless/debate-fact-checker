@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnalysisResults } from "@/components/analysis-results";
 import type { AgentTurn } from "@/components/agent-turn-timeline";
 import { isRunningStatus } from "@/lib/analysis-status";
@@ -48,6 +49,7 @@ type AnalysisPayload = {
 };
 
 export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
+  const router = useRouter();
   const [analysis, setAnalysis] = useState(initial);
   const latestTurnIndex = useRef(
     initial.turns?.length ? Math.max(...initial.turns.map((t) => t.turnIndex)) : -1,
@@ -109,11 +111,16 @@ export function AnalysisLiveWrapper({ initial }: { initial: AnalysisPayload }) {
     return () => clearInterval(interval);
   }, [analysis.status, poll]);
 
+  const handleDeleted = useCallback(() => {
+    router.push("/history");
+  }, [router]);
+
   return (
     <AnalysisResults
       analysis={analysis}
       live={isRunningStatus(analysis.status)}
       onCancelled={handleCancelled}
+      onDeleted={handleDeleted}
     />
   );
 }

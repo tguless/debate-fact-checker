@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentTurnTimeline, type AgentTurn } from "@/components/agent-turn-timeline";
 import { CancelAnalysisButton } from "@/components/cancel-analysis-button";
+import { DeleteAnalysisButton } from "@/components/delete-analysis-button";
 import { ClaimList } from "@/components/claim-list";
 import { PhaseTimeline } from "@/components/phase-timeline";
 import { TechniqueScoreCard } from "@/components/technique-score-card";
@@ -59,10 +60,12 @@ export function AnalysisResults({
   analysis,
   live = false,
   onCancelled,
+  onDeleted,
 }: {
   analysis: AnalysisPayload;
   live?: boolean;
   onCancelled?: () => void;
+  onDeleted?: () => void;
 }) {
   const durationLabel = analysis.durationSeconds
     ? `${Math.floor(analysis.durationSeconds / 60)}m ${analysis.durationSeconds % 60}s`
@@ -80,14 +83,23 @@ export function AnalysisResults({
               <Badge variant="outline">{analysis.segmentCount} segments</Badge>
               <Badge variant="outline">{durationLabel}</Badge>
             </div>
-            {live ? (
-              <CancelAnalysisButton
+            <div className="flex flex-wrap items-center gap-2">
+              {live ? (
+                <CancelAnalysisButton
+                  analysisId={analysis.id}
+                  variant="destructive"
+                  size="sm"
+                  onCancelled={onCancelled}
+                />
+              ) : null}
+              <DeleteAnalysisButton
                 analysisId={analysis.id}
-                variant="destructive"
+                videoId={analysis.videoId}
                 size="sm"
-                onCancelled={onCancelled}
+                variant="outline"
+                onDeleted={onDeleted}
               />
-            ) : null}
+            </div>
           </div>
           <CardTitle className="font-heading text-2xl">
             {analysis.title ?? "Rhetoric analysis report"}

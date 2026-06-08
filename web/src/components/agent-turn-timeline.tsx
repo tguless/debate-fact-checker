@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { CancelAnalysisButton } from "@/components/cancel-analysis-button";
+import { DeleteAnalysisButton } from "@/components/delete-analysis-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -166,10 +167,12 @@ export function AgentTurnTimelineLive({
   url,
   onStarted,
   onCancelled,
+  onDeleted,
 }: {
   url: string;
   onStarted?: (analysisId: string) => void;
   onCancelled?: () => void;
+  onDeleted?: () => void;
 }) {
   const [turns, setTurns] = useState<AgentTurn[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
@@ -292,15 +295,26 @@ export function AgentTurnTimelineLive({
               >
                 Open live report page →
               </Link>
-              <CancelAnalysisButton
+              {status === "running" ? (
+                <CancelAnalysisButton
+                  analysisId={analysisId}
+                  variant="destructive"
+                  size="sm"
+                  onCancelled={() => {
+                    abortRef.current?.abort();
+                    setStatus("cancelled");
+                    setError("Cancelled by user");
+                    onCancelled?.();
+                  }}
+                />
+              ) : null}
+              <DeleteAnalysisButton
                 analysisId={analysisId}
-                variant="destructive"
                 size="sm"
-                onCancelled={() => {
+                variant="ghost"
+                onDeleted={() => {
                   abortRef.current?.abort();
-                  setStatus("cancelled");
-                  setError("Cancelled by user");
-                  onCancelled?.();
+                  onDeleted?.() ?? onCancelled?.();
                 }}
               />
             </>
@@ -328,10 +342,26 @@ export function AgentTurnTimelineLive({
           >
             View full report
           </Link>
+          <DeleteAnalysisButton
+            analysisId={analysisId}
+            size="sm"
+            variant="outline"
+            onDeleted={() => onDeleted?.() ?? onCancelled?.()}
+          />
         </div>
       ) : null}
       {status === "cancelled" ? (
-        <p className="text-sm text-muted-foreground">Job cancelled.</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground">Job cancelled.</p>
+          {analysisId ? (
+            <DeleteAnalysisButton
+              analysisId={analysisId}
+              size="sm"
+              variant="outline"
+              onDeleted={() => onDeleted?.() ?? onCancelled?.()}
+            />
+          ) : null}
+        </div>
       ) : null}
       {error ? (
         <p className={`text-sm ${status === "cancelled" ? "text-muted-foreground" : "text-destructive"}`}>

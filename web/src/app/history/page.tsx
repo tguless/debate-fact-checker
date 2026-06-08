@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HistoryIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { HistoryAnalysisList } from "@/components/history-analysis-list";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -73,45 +72,19 @@ export default async function HistoryPage({ searchParams }: PageProps) {
           </button>
         </form>
 
-        <div className="flex flex-col gap-4">
-          {analyses.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No analyses found.
-              </CardContent>
-            </Card>
-          ) : (
-            analyses.map((item) => (
-              <Link key={item.id} href={`/analyses/${item.id}`}>
-                <Card className="border-border/60 transition-colors hover:bg-muted/30">
-                  <CardHeader className="flex flex-row items-start justify-between gap-4">
-                    <div className="flex flex-col gap-1">
-                      <CardTitle className="font-mono text-sm">{item.videoId}</CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {item.summary ?? item.videoUrl}
-                      </CardDescription>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge variant="outline">{item.status}</Badge>
-                      {item.overallScore ? (
-                        <span className="text-sm font-medium">
-                          {Math.round(item.overallScore)}/100
-                        </span>
-                      ) : null}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span>{item._count.claims} claims flagged</span>
-                    <span>·</span>
-                    <span>{item.segmentCount} segments</span>
-                    <span>·</span>
-                    <span>{item.createdAt.toLocaleDateString()}</span>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </div>
+        <HistoryAnalysisList
+          items={analyses.map((item) => ({
+            id: item.id,
+            videoId: item.videoId,
+            videoUrl: item.videoUrl,
+            status: item.status,
+            overallScore: item.overallScore,
+            segmentCount: item.segmentCount,
+            summary: item.summary,
+            createdAt: item.createdAt.toISOString(),
+            claimCount: item._count.claims,
+          }))}
+        />
       </div>
     </main>
   );
