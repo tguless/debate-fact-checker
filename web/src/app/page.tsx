@@ -5,6 +5,7 @@ import { AnalysisForm } from "@/components/analysis-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecentAnalysesCard } from "@/components/recent-analyses-card";
+import { SiteFooter } from "@/components/site-footer";
 import { getApiKeyStatus } from "@/lib/env-status";
 
 export const dynamic = "force-dynamic";
@@ -88,6 +89,8 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
