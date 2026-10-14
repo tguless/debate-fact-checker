@@ -7,6 +7,7 @@
 #
 # Options:
 #   DEPLOY_SKIP_GIT_CHECK=1
+#   DEPLOY_SKIP_SOCIAL_CHECK=1
 #   EYESENSE_HOST=eyesense
 #   EYESENSE_REMOTE_DIR=debate-fact-checker
 
@@ -34,7 +35,59 @@ if [ "${DEPLOY_SKIP_GIT_CHECK:-}" != "1" ]; then
   echo "Git OK: $(git rev-parse --short HEAD) on $GIT_REMOTE/$GIT_BRANCH"
 fi
 
+
+# Social link-preview + app icon (see llm-ocr/scripts/check-eyesense-social-assets.sh)
+_eyesense_social_lib="" _search_dir="$ROOT"
+while [ "$_search_dir" != "/" ]; do
+  if [ -f "$_search_dir/scripts/lib/eyesense-social-preflight.sh" ]; then
+    _eyesense_social_lib="$_search_dir/scripts/lib/eyesense-social-preflight.sh"
+    break
+  fi
+  _search_dir="$(dirname "$_search_dir")"
+done
+if [ -z "$_eyesense_social_lib" ] && [ -f "$HOME/llm-ocr/scripts/lib/eyesense-social-preflight.sh" ]; then
+  _eyesense_social_lib="$HOME/llm-ocr/scripts/lib/eyesense-social-preflight.sh"
+fi
+if [ -n "$_eyesense_social_lib" ]; then
+  # shellcheck source=/dev/null
+  source "$_eyesense_social_lib"
+  ensure_eyesense_social_assets "$ROOT"
+fi
+
 REPO_URL="$(git remote get-url "$GIT_REMOTE")"
+
+
+ensure_verizon_port_forward() {
+  if [ "${DEPLOY_SKIP_PORT_FORWARD:-}" = "1" ]; then
+    echo "Skipping Verizon port forward (DEPLOY_SKIP_PORT_FORWARD=1)"
+    return 0
+  fi
+  local forward_helper="" search_dir="$ROOT"
+  while [ "$search_dir" != "/" ]; do
+    if [ -f "$search_dir/scripts/ensure-verizon-port-forward.sh" ]; then
+      forward_helper="$search_dir/scripts/ensure-verizon-port-forward.sh"
+      break
+    fi
+    search_dir="$(dirname "$search_dir")"
+  done
+  if [ -z "$forward_helper" ] && [ -f "$HOME/llm-ocr/scripts/ensure-verizon-port-forward.sh" ]; then
+    forward_helper="$HOME/llm-ocr/scripts/ensure-verizon-port-forward.sh"
+  fi
+  if [ -z "$forward_helper" ]; then
+    echo "Verizon port-forward helper not found. Set DEPLOY_SKIP_PORT_FORWARD=1 to skip." >&2
+    exit 1
+  fi
+  local args=(--name "$REMOTE_DIR")
+  if [ -n "${EYESENSE_FORWARD_PORT:-}" ]; then
+    args+=(--port "$EYESENSE_FORWARD_PORT")
+  fi
+  if [ -n "${EYESENSE_FORWARD_DEST_PORT:-}" ]; then
+    args+=(--dest-port "$EYESENSE_FORWARD_DEST_PORT")
+  fi
+  bash "$forward_helper" "${args[@]}"
+}
+
+ensure_verizon_port_forward
 
 ssh "$HOST" bash -s <<EOF
 set -euo pipefail
